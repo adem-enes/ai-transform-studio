@@ -84,10 +84,8 @@ export function HistoryView() {
           </p>
           <ul className={GRID}>
             {items.map((item, index) => (
-              <li key={item.id} className="flex">
-                <div className="w-full">
-                  <HistoryCard item={item} now={now} preload={index < 3} />
-                </div>
+              <li key={item.id}>
+                <HistoryCard item={item} now={now} preload={index < 3} />
               </li>
             ))}
           </ul>

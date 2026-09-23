@@ -36,7 +36,7 @@ export function HistoryCard({ item, now, preload }: HistoryCardProps) {
 
   return (
     <Sheet>
-      <article className="relative flex flex-col overflow-hidden rounded-xl border bg-card transition-shadow focus-within:ring-3 focus-within:ring-ring/50 hover:shadow-md">
+      <article className="relative flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-shadow focus-within:ring-3 focus-within:ring-ring/50 hover:shadow-md">
         <div className="relative">
           <MediaFrame
             src={thumbnailUrl(transformation)}
@@ -47,7 +47,10 @@ export function HistoryCard({ item, now, preload }: HistoryCardProps) {
             preload={preload}
             className="rounded-none"
           />
-          <StatusBadge status={status} className="absolute top-2 left-2 shadow-sm" />
+          {/* Solid backing: some badge variants are translucent tints, unreadable over a photo. */}
+          <span className="absolute top-2 left-2 rounded-4xl bg-background shadow-sm">
+            <StatusBadge status={status} />
+          </span>
         </div>
         <div className="flex flex-1 flex-col gap-1.5 p-3">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">

@@ -104,10 +104,15 @@ export function FileDropzone({ kind, value, onChange, labelledBy, disabled = fal
   const phaseKey = state.phase === 'idle' ? (value ? 'ready' : 'idle') : state.phase;
   const lastPhaseKey = useRef(phaseKey);
   useEffect(() => {
-    if (lastPhaseKey.current === phaseKey) {
+    const previous = lastPhaseKey.current;
+    if (previous === phaseKey) {
       return;
     }
     lastPhaseKey.current = phaseKey;
+    // idle → ready means the parent supplied a source (e.g. restored from the URL), not a user action.
+    if (previous === 'idle' && phaseKey === 'ready') {
+      return;
+    }
     const active = document.activeElement;
     if (active && active !== document.body && !zoneRef.current?.contains(active)) {
       return;

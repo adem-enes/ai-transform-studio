@@ -97,6 +97,13 @@ export function ImageTransformView() {
 
   // Focus: the panel heading when work starts, and again when it settles.
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const submitErrorRef = useRef<HTMLDivElement>(null);
+  // A failed submit replaces the "working" panel with nothing, so focus follows the error to the form.
+  useEffect(() => {
+    if (submitError) {
+      submitErrorRef.current?.focus();
+    }
+  }, [submitError]);
   const lastPanelKind = useRef(panel.kind);
   useEffect(() => {
     const previous = lastPanelKind.current;
@@ -223,14 +230,16 @@ export function ImageTransformView() {
             <span className="font-medium">{describeCost(model)}</span>
           </p>
           {submitError ? (
-            <TransformationError
-              code={submitError}
-              actions={{
-                retry: () => void onSubmit(),
-                'edit-params': () => setFocus('prompt'),
-                'choose-file': () => document.getElementById('upload-heading')?.focus(),
-              }}
-            />
+            <div ref={submitErrorRef} tabIndex={-1} className="scroll-mt-24 focus:outline-none">
+              <TransformationError
+                code={submitError}
+                actions={{
+                  retry: () => void onSubmit(),
+                  'edit-params': () => setFocus('prompt'),
+                  'choose-file': () => document.getElementById('upload-heading')?.focus(),
+                }}
+              />
+            </div>
           ) : null}
           <Button
             type="submit"
