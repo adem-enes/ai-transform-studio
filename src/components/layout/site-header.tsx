@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Container } from './container';
 import { MainNav } from './main-nav';
 
@@ -12,7 +13,10 @@ export function SiteHeader() {
         >
           AI Transform Studio
         </Link>
-        <MainNav />
+        <div className="flex items-center gap-1">
+          <MainNav />
+          <ThemeToggle />
+        </div>
       </Container>
     </header>
   );

@@ -1,2 +1,2 @@
-/** Transformation history. Public surface of this folder; populated in a later phase. */
-export {};
+/** Transformation history. Public surface of this folder. */
+export { HistoryView } from './components/history-view';

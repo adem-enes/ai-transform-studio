@@ -20,7 +20,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn('font-sans', geist.variable)}>
+    // next-themes adds the theme class before hydration; the mismatch is expected.
+    <html lang="en" className={cn('font-sans', geist.variable)} suppressHydrationWarning>
       <body className="flex min-h-dvh flex-col antialiased">
         <Providers>
           <SkipLink />
