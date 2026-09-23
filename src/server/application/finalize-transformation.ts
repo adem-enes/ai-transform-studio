@@ -1,0 +1,54 @@
+import 'server-only';
+import type { TransformationDoc } from '@/server/db/models';
+import { AppError } from '@/server/errors';
+import type { StoredAsset } from '@/server/services';
+import type { AppDeps } from './deps';
+
+/**
+ * Copies a finished result into Cloudinary and marks the transformation
+ * `completed`. Shared by the webhook and reconciliation, and safe to run any
+ * number of times, concurrently included:
+ *
+ * - the output is stored under the transformation's id with overwrite, so a
+ *   repeated copy replaces rather than duplicates;
+ * - every status change is a conditional transition, so only one caller wins
+ *   and the rest observe the result.
+ *
+ * If the copy fails the document stays `finalizing` and a retryable error is
+ * thrown; the next webhook delivery or status poll tries again.
+ *
+ * Returns the latest document. One already in a terminal status is returned untouched.
+ */
+export async function finalizeTransformation(
+  transformation: TransformationDoc,
+  downloadUrl: string,
+  { transformations, storage, clock }: Pick<AppDeps, 'transformations' | 'storage' | 'clock'>,
+): Promise<TransformationDoc> {
+  let current = transformation;
+  if (current.status !== 'finalizing') {
+    const moved = await transformations.transition(current._id, ['queued', 'processing'], 'finalizing');
+    const latest = moved ?? (await transformations.findById(current._id));
+    if (latest?.status !== 'finalizing') {
+      return latest ?? current;
+    }
+    current = latest;
+  }
+
+  let stored: StoredAsset;
+  try {
+    stored = await storage.uploadFromUrl(downloadUrl, {
+      kind: current.kind,
+      folder: 'outputs',
+      publicId: current._id.toHexString(),
+    });
+  } catch (error) {
+    throw new AppError('STORAGE_FAILED', { retryable: true, cause: error });
+  }
+
+  const completed = await transformations.transition(current._id, ['finalizing'], 'completed', {
+    output: { publicId: stored.publicId, secureUrl: stored.secureUrl },
+    error: null,
+    completedAt: clock.now(),
+  });
+  return completed ?? (await transformations.findById(current._id)) ?? current;
+}
