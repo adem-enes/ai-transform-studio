@@ -39,6 +39,9 @@ export const ACTIVE_STATUSES: readonly TransformationStatus[] = TRANSFORMATION_S
   (status) => !isTerminalStatus(status),
 );
 
+/** Statuses a provider check may be claimed for. The recovery window for `timed_out` is the caller's to enforce. */
+const RECONCILABLE_STATUSES: readonly TransformationStatus[] = [...ACTIVE_STATUSES, 'timed_out'];
+
 function parse(doc: unknown): TransformationDoc {
   return transformationDoc.parse(doc);
 }
@@ -187,8 +190,8 @@ export async function countActiveTransformationsByUser(userId: string): Promise<
 
 /**
  * Atomically claims the right to check this transformation with the provider:
- * succeeds (returning the updated document) only if it is still active and was
- * not claimed within the last `minIntervalMs`. Concurrent status polls race on
+ * succeeds (returning the updated document) only if it is still active (or
+ * `timed_out`, hence recoverable) and was not claimed within the last `minIntervalMs`. Concurrent status polls race on
  * this single conditional update, so at most one of them calls Magic Hour.
  */
 export async function claimReconciliation(
@@ -199,7 +202,7 @@ export async function claimReconciliation(
   const doc = await (await transformationsCollection()).findOneAndUpdate(
     {
       _id: id,
-      status: { $in: [...ACTIVE_STATUSES] },
+      status: { $in: [...RECONCILABLE_STATUSES] },
       $or: [
         // `null` also matches documents written before the field existed.
         { lastReconciledAt: null },

@@ -150,10 +150,76 @@ describe('reconcileTransformation', () => {
     expect(deps.provider.statusCalls).toBe(0);
   });
 
-  it('leaves terminal jobs alone', async () => {
+  it.each(['completed', 'failed'] as const)('leaves %s jobs alone', async (status) => {
     const deps = createFakeDeps();
-    const job = seedSubmitted(deps, { status: 'completed' });
+    const job = seedSubmitted(deps, { status });
     await reconcileTransformation(job, deps.clock.now(), deps);
     expect(deps.provider.statusCalls).toBe(0);
+  });
+
+  describe('timed_out recovery', () => {
+    function seedTimedOut(deps: FakeDeps) {
+      const job = seedSubmitted(deps, { status: 'timed_out' });
+      deps.clock.advance(WORKFLOW.timeoutMs.image + 1);
+      return job;
+    }
+
+    it('finalizes a timed_out job the provider has since completed', async () => {
+      const deps = createFakeDeps();
+      const job = seedTimedOut(deps);
+      providerSays(deps, 'complete', [{ url: 'https://videos.magichour.ai/proj_1/out.png', expiresAt: '' }]);
+
+      const result = await reconcileTransformation(job, deps.clock.now(), deps);
+      expect(result.status).toBe('completed');
+      expect(result.error).toBeNull();
+      expect(result.output?.publicId).toContain(job._id.toHexString());
+    });
+
+    it.each(['error', 'canceled'] as const)(
+      'fails a timed_out job the provider reports %s',
+      async (status) => {
+        const deps = createFakeDeps();
+        const job = seedTimedOut(deps);
+        providerSays(deps, status);
+
+        const result = await reconcileTransformation(job, deps.clock.now(), deps);
+        expect(result.status).toBe('failed');
+        expect(result.error?.code).toBe('TRANSFORMATION_FAILED');
+      },
+    );
+
+    it('keeps a timed_out job timed_out while the provider is still rendering', async () => {
+      const deps = createFakeDeps();
+      const job = seedTimedOut(deps);
+      providerSays(deps, 'rendering');
+      await expect(reconcileTransformation(job, deps.clock.now(), deps)).resolves.toMatchObject({
+        status: 'timed_out',
+      });
+    });
+
+    it('checks a timed_out job at most once per interval', async () => {
+      const deps = createFakeDeps();
+      const job = seedTimedOut(deps);
+
+      await reconcileTransformation(job, deps.clock.now(), deps);
+      await reconcileTransformation(job, deps.clock.now(), deps);
+      expect(deps.provider.statusCalls).toBe(1);
+
+      deps.clock.advance(WORKFLOW.reconcileIntervalMs);
+      await reconcileTransformation(job, deps.clock.now(), deps);
+      expect(deps.provider.statusCalls).toBe(2);
+    });
+
+    it('stops checking a timed_out job once the recovery window has passed', async () => {
+      const deps = createFakeDeps();
+      const job = seedSubmitted(deps, { status: 'timed_out' });
+      providerSays(deps, 'complete', [{ url: 'https://videos.magichour.ai/proj_1/out.png', expiresAt: '' }]);
+
+      deps.clock.advance(WORKFLOW.timedOutRecoveryMs + 1);
+      await expect(reconcileTransformation(job, deps.clock.now(), deps)).resolves.toMatchObject({
+        status: 'timed_out',
+      });
+      expect(deps.provider.statusCalls).toBe(0);
+    });
   });
 });

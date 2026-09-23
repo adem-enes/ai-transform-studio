@@ -142,7 +142,7 @@ export class FakeTransformationStore implements TransformationStore {
     minIntervalMs: number,
   ): Promise<TransformationDoc | null> {
     const doc = this.docs.get(id.toHexString());
-    if (!doc || isTerminalStatus(doc.status)) {
+    if (!doc || (isTerminalStatus(doc.status) && doc.status !== 'timed_out')) {
       return null;
     }
     if (doc.lastReconciledAt && doc.lastReconciledAt.getTime() > now.getTime() - minIntervalMs) {

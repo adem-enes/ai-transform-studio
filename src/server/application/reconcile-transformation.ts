@@ -16,6 +16,10 @@ type ReconcileDeps = Pick<AppDeps, 'transformations' | 'storage' | 'provider' | 
  * event (cancellation has none), a failed result copy, a job that never
  * finishes, and a submission whose project id was never saved.
  *
+ * It also runs for a `timed_out` job within `WORKFLOW.timedOutRecoveryMs` of
+ * submission: the timeout is our guess, so a job the provider has since
+ * completed is finalized, and one it errored or cancelled becomes `failed`.
+ *
  * - At most one provider check per transformation per
  *   `WORKFLOW.reconcileIntervalMs`, claimed atomically so concurrent polls
  *   don't all call Magic Hour.
@@ -29,7 +33,7 @@ export async function reconcileTransformation(
   now: Date,
   deps: ReconcileDeps,
 ): Promise<TransformationDoc> {
-  if (isTerminalStatus(transformation.status)) {
+  if (!isReconcilable(transformation, now)) {
     return transformation;
   }
   try {
@@ -38,6 +42,17 @@ export async function reconcileTransformation(
     deps.logger.error('Reconciliation failed', { transformationId: transformation._id, error });
     return (await deps.transformations.findById(transformation._id).catch(() => null)) ?? transformation;
   }
+}
+
+function isReconcilable(transformation: TransformationDoc, now: Date): boolean {
+  if (!isTerminalStatus(transformation.status)) {
+    return true;
+  }
+  if (transformation.status !== 'timed_out') {
+    return false;
+  }
+  const startedAt = transformation.submittedAt ?? transformation.createdAt;
+  return now.getTime() - startedAt.getTime() <= WORKFLOW.timedOutRecoveryMs;
 }
 
 async function reconcile(
@@ -120,7 +135,7 @@ async function applyProviderStatus(
       const cancelled = project.status === 'canceled';
       return move(
         transformation,
-        ['queued', 'processing'],
+        ['queued', 'processing', 'timed_out'],
         'failed',
         {
           error: storedError(

@@ -16,6 +16,8 @@ const ALLOWED: ReadonlyArray<readonly [TransformationStatus, TransformationStatu
   ['processing', 'timed_out'],
   ['finalizing', 'completed'],
   ['finalizing', 'failed'],
+  ['timed_out', 'finalizing'],
+  ['timed_out', 'failed'],
 ];
 
 const isAllowed = (from: TransformationStatus, to: TransformationStatus) =>

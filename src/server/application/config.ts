@@ -3,6 +3,7 @@ import type { MediaKind } from '@/schemas';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
 
 /** Workflow timing and limits — the one place these numbers live. */
 export const WORKFLOW = {
@@ -21,4 +22,10 @@ export const WORKFLOW = {
     image: 5 * MINUTE,
     video: 20 * MINUTE,
   } satisfies Record<MediaKind, number>,
+  /**
+   * Since submission; a `timed_out` job is still checked with the provider
+   * until then, in case it finished after all. Magic Hour's download URLs
+   * expire about a day after the render, so later there is nothing to recover.
+   */
+  timedOutRecoveryMs: 24 * HOUR,
 } as const;

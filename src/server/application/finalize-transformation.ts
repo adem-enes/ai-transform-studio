@@ -17,7 +17,7 @@ import type { AppDeps } from './deps';
  * If the copy fails the document stays `finalizing` and a retryable error is
  * thrown; the next webhook delivery or status poll tries again.
  *
- * Returns the latest document. One already in a terminal status is returned untouched.
+ * Returns the latest document. One already `completed` or `failed` is returned untouched.
  */
 export async function finalizeTransformation(
   transformation: TransformationDoc,
@@ -26,7 +26,13 @@ export async function finalizeTransformation(
 ): Promise<TransformationDoc> {
   let current = transformation;
   if (current.status !== 'finalizing') {
-    const moved = await transformations.transition(current._id, ['queued', 'processing'], 'finalizing');
+    // A recovered `timed_out` job drops its timeout error and completion time.
+    const moved = await transformations.transition(
+      current._id,
+      ['queued', 'processing', 'timed_out'],
+      'finalizing',
+      { error: null, completedAt: null },
+    );
     const latest = moved ?? (await transformations.findById(current._id));
     if (latest?.status !== 'finalizing') {
       return latest ?? current;

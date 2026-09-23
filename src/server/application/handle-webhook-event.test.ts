@@ -96,6 +96,38 @@ describe('handleWebhookEvent', () => {
     expect(doc?.provider.creditsCharged).toBe(0);
   });
 
+  it('recovers a timed_out job when a late completed event arrives', async () => {
+    const deps = createFakeDeps();
+    const job = seedSubmitted(deps, { status: 'timed_out' });
+
+    await expect(handleWebhookEvent(event('image.completed'), deps)).resolves.toEqual({
+      result: 'applied',
+      status: 'completed',
+    });
+    const doc = deps.transformations.get(job._id);
+    expect(doc?.status).toBe('completed');
+    expect(doc?.error).toBeNull();
+    expect(doc?.output?.secureUrl).toMatch(/^https:\/\/res\.cloudinary\.com\//);
+  });
+
+  it('fails a timed_out job when a late errored event arrives', async () => {
+    const deps = createFakeDeps();
+    const job = seedSubmitted(deps, { status: 'timed_out' });
+
+    await expect(handleWebhookEvent(event('image.errored'), deps)).resolves.toMatchObject({
+      result: 'applied',
+      status: 'failed',
+    });
+    expect(deps.transformations.get(job._id)?.error?.code).toBe('TRANSFORMATION_FAILED');
+  });
+
+  it('ignores a late started event for a timed_out job', async () => {
+    const deps = createFakeDeps();
+    const job = seedSubmitted(deps, { status: 'timed_out' });
+    await expect(handleWebhookEvent(event('image.started'), deps)).resolves.toMatchObject({ result: 'noop' });
+    expect(statusOf(deps, job._id)).toBe('timed_out');
+  });
+
   it('throws a retryable error for an unknown project', async () => {
     const deps = createFakeDeps();
     const error = await handleWebhookEvent(event('image.completed', {}, 'proj_unknown'), deps).catch(

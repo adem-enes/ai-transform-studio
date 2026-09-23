@@ -61,7 +61,8 @@ export async function handleWebhookEvent(
     }
 
     case 'completed': {
-      if (isTerminalStatus(transformation.status)) {
+      // `timed_out` is our guess, not the provider's: a late completion recovers the job.
+      if (isTerminalStatus(transformation.status) && transformation.status !== 'timed_out') {
         return { result: 'noop', status: transformation.status };
       }
       const downloadUrl =
@@ -76,7 +77,7 @@ export async function handleWebhookEvent(
     case 'errored': {
       const failed = await transformations.transition(
         transformation._id,
-        ['queued', 'processing'],
+        ['queued', 'processing', 'timed_out'],
         'failed',
         {
           error: storedError('TRANSFORMATION_FAILED'),
