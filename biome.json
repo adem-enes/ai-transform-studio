@@ -81,7 +81,12 @@
       }
     },
     {
-      "includes": ["src/instrumentation.ts", "src/instrumentation.node.ts", "scripts/**"],
+      "includes": [
+        "src/instrumentation.ts",
+        "src/instrumentation.node.ts",
+        "src/server/logger.ts",
+        "scripts/**"
+      ],
       "linter": {
         "rules": {
           "suspicious": {

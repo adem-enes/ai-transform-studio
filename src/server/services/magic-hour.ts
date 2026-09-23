@@ -55,7 +55,7 @@ export type SubmittedProject = {
   creditsCharged: number;
 };
 
-type SubmitInput<P> = {
+export type SubmitInput<P> = {
   /** Public URL of the source, with a file extension (a Cloudinary `secure_url` qualifies). */
   sourceUrl: string;
   params: P;

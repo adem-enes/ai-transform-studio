@@ -88,6 +88,11 @@ const transformationBase = z.object({
   createdAt: z.date(),
   submittedAt: z.date().nullable(),
   completedAt: z.date().nullable(),
+  /**
+   * Last time a status poll claimed a provider check for this document (see
+   * `claimReconciliation`). Documents written before the field existed read as `null`.
+   */
+  lastReconciledAt: z.date().nullable().default(null),
   updatedAt: z.date(),
 });
 

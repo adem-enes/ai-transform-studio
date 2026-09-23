@@ -75,7 +75,7 @@ export type TransformResponse = z.infer<typeof transformResponse>;
 // History
 // ---------------------------------------------------------------------------
 
-export const HISTORY_PAGE_SIZE = { default: 12, max: 50 } as const;
+export const HISTORY_PAGE_SIZE = { default: 20, max: 50 } as const;
 
 export const historyQuery = z.object({
   cursor: z.string().min(1).optional(),

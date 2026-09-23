@@ -51,21 +51,34 @@ export type StoredAsset = {
   durationSeconds: number | null;
 };
 
+export type UploadFromUrlOptions = {
+  kind: MediaKind;
+  folder: StorageFolder;
+  /**
+   * Fixed name within the folder. When set, an existing asset with the same
+   * name is overwritten, which makes repeating the copy idempotent (used for
+   * outputs, named after their transformation). Otherwise Cloudinary picks a
+   * unique name and never overwrites.
+   */
+  publicId?: string;
+};
+
 /**
  * Copies a remote file into Cloudinary by URL: Cloudinary fetches it, so this
  * server never streams the bytes itself.
  */
 export async function uploadFromUrl(
   url: string,
-  { kind, folder }: { kind: MediaKind; folder: StorageFolder },
+  { kind, folder, publicId }: UploadFromUrlOptions,
 ): Promise<StoredAsset> {
   let response: unknown;
   try {
     response = await client().uploader.upload(url, {
       resource_type: kind,
       folder: `${ROOT_FOLDER}/${folder}/${kind}`,
-      unique_filename: true,
-      overwrite: false,
+      ...(publicId
+        ? { public_id: publicId, overwrite: true, invalidate: true }
+        : { unique_filename: true, overwrite: false }),
     });
   } catch (error) {
     throw new AppError('STORAGE_FAILED', { cause: cloudinaryFailure(error) });

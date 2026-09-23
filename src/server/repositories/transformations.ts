@@ -1,6 +1,12 @@
 import 'server-only';
 import { type Filter, ObjectId } from 'mongodb';
-import { canTransition, isTerminalStatus, type MediaKind, type TransformationStatus } from '@/schemas';
+import {
+  canTransition,
+  isTerminalStatus,
+  type MediaKind,
+  TRANSFORMATION_STATUSES,
+  type TransformationStatus,
+} from '@/schemas';
 import { transformationsCollection } from '@/server/db/collections';
 import {
   type TransformationDoc,
@@ -24,8 +30,14 @@ export type NewTransformation = DistributiveOmit<
   | 'createdAt'
   | 'submittedAt'
   | 'completedAt'
+  | 'lastReconciledAt'
   | 'updatedAt'
 >;
+
+/** Every non-terminal status — a transformation in one of these still has work outstanding. */
+export const ACTIVE_STATUSES: readonly TransformationStatus[] = TRANSFORMATION_STATUSES.filter(
+  (status) => !isTerminalStatus(status),
+);
 
 function parse(doc: unknown): TransformationDoc {
   return transformationDoc.parse(doc);
@@ -43,10 +55,22 @@ export async function createTransformation(input: NewTransformation): Promise<Tr
     createdAt: now,
     submittedAt: null,
     completedAt: null,
+    lastReconciledAt: null,
     updatedAt: now,
   });
   await (await transformationsCollection()).insertOne(doc);
   return doc;
+}
+
+/** Removes a transformation that was never submitted (used to back out of the active-job guard). */
+export async function deleteTransformation(id: ObjectId): Promise<void> {
+  await (await transformationsCollection()).deleteOne({ _id: id, 'provider.projectId': null });
+}
+
+/** Internal lookup by id, not user-scoped — for workflow code that already holds a trusted id. */
+export async function findTransformationById(id: ObjectId): Promise<TransformationDoc | null> {
+  const doc = await (await transformationsCollection()).findOne({ _id: id });
+  return doc ? parse(doc) : null;
 }
 
 export async function findTransformationByIdForUser(
@@ -74,17 +98,20 @@ export async function findTransformationByProjectId(projectId: string): Promise<
  */
 export async function markTransformationSubmitted(
   id: ObjectId,
-  { projectId, creditsCharged }: { projectId: string; creditsCharged: number },
+  {
+    projectId,
+    creditsCharged,
+    submittedAt,
+  }: { projectId: string; creditsCharged: number; submittedAt: Date },
 ): Promise<TransformationDoc | null> {
-  const now = new Date();
   const doc = await (await transformationsCollection()).findOneAndUpdate(
     { _id: id, status: 'queued', 'provider.projectId': null },
     {
       $set: {
         'provider.projectId': projectId,
         'provider.creditsCharged': creditsCharged,
-        submittedAt: now,
-        updatedAt: now,
+        submittedAt,
+        updatedAt: new Date(),
       },
     },
     { returnDocument: 'after' },
@@ -138,6 +165,48 @@ export async function transition(
   const doc = await (await transformationsCollection()).findOneAndUpdate(
     { _id: id, status: { $in: [...allowedFrom] } },
     { $set: set },
+    { returnDocument: 'after' },
+  );
+  return doc ? parse(doc) : null;
+}
+
+export async function listActiveTransformationsByUser(userId: string): Promise<TransformationDoc[]> {
+  const docs = await (await transformationsCollection())
+    .find({ userId, status: { $in: [...ACTIVE_STATUSES] } })
+    .sort({ createdAt: -1, _id: -1 })
+    .toArray();
+  return docs.map(parse);
+}
+
+export async function countActiveTransformationsByUser(userId: string): Promise<number> {
+  return (await transformationsCollection()).countDocuments({
+    userId,
+    status: { $in: [...ACTIVE_STATUSES] },
+  });
+}
+
+/**
+ * Atomically claims the right to check this transformation with the provider:
+ * succeeds (returning the updated document) only if it is still active and was
+ * not claimed within the last `minIntervalMs`. Concurrent status polls race on
+ * this single conditional update, so at most one of them calls Magic Hour.
+ */
+export async function claimReconciliation(
+  id: ObjectId,
+  now: Date,
+  minIntervalMs: number,
+): Promise<TransformationDoc | null> {
+  const doc = await (await transformationsCollection()).findOneAndUpdate(
+    {
+      _id: id,
+      status: { $in: [...ACTIVE_STATUSES] },
+      $or: [
+        // `null` also matches documents written before the field existed.
+        { lastReconciledAt: null },
+        { lastReconciledAt: { $lte: new Date(now.getTime() - minIntervalMs) } },
+      ],
+    },
+    { $set: { lastReconciledAt: now } },
     { returnDocument: 'after' },
   );
   return doc ? parse(doc) : null;
