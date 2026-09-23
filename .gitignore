@@ -1,0 +1,36 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+out
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# Test output
+coverage
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Env — `.env.example` is committed, real values never are
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.claude
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.sw?

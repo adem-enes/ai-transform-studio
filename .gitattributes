@@ -1,0 +1,23 @@
+# Line endings, decided by the repository rather than by each contributor's
+# `core.autocrlf`. Biome's formatter enforces LF; on Windows the default
+# `core.autocrlf=true` would check every file out as CRLF and fail lint on a
+# tree nobody has edited.
+* text=auto eol=lf
+
+# Never converted, never diffed as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.avif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary
+*.mp4 binary
+*.webm binary
+*.mov binary
