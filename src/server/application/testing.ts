@@ -2,8 +2,15 @@ import 'server-only';
 import { ObjectId } from 'mongodb';
 import { canTransition, isTerminalStatus, type MediaKind, type TransformationStatus } from '@/schemas';
 import { type TransformationDoc, transformationDoc, type UploadDoc } from '@/server/db/models';
+import { AppError } from '@/server/errors';
 import { silentLogger } from '@/server/logger';
-import type { ProjectStatus, StoredAsset, SubmittedProject, UploadFromUrlOptions } from '@/server/services';
+import type {
+  ProjectStatus,
+  StoredAsset,
+  SubmittedProject,
+  UploadFromUrlOptions,
+  VerifiedFile,
+} from '@/server/services';
 import type { AppDeps, TransformationStore } from './deps';
 
 /**
@@ -196,7 +203,30 @@ export class FakeStorage {
       width: 640,
       height: 480,
       durationSeconds: options.kind === 'video' ? 4 : null,
+      frameRate: options.kind === 'video' ? 24 : null,
     };
+  }
+}
+
+/** Uploadcare. Serves the files in `files`; records deletes; set `failDelete` to make them throw. */
+export class FakeUploadInbox {
+  readonly files = new Map<string, VerifiedFile>();
+  readonly deleted: string[] = [];
+  failDelete = false;
+
+  async getVerifiedFile(uuid: string, kind: MediaKind): Promise<VerifiedFile> {
+    const file = this.files.get(uuid);
+    if (!file || file.kind !== kind) {
+      throw new AppError('UPLOAD_NOT_FOUND');
+    }
+    return file;
+  }
+
+  async deleteFile(uuid: string): Promise<void> {
+    if (this.failDelete) {
+      throw new Error('Uploadcare is down');
+    }
+    this.deleted.push(uuid);
   }
 }
 
@@ -234,6 +264,7 @@ export type FakeDeps = AppDeps & {
   transformations: FakeTransformationStore;
   uploads: FakeUploadStore;
   storage: FakeStorage;
+  uploadcare: FakeUploadInbox;
   provider: FakeProvider;
 };
 
@@ -244,11 +275,7 @@ export function createFakeDeps(): FakeDeps {
     transformations: new FakeTransformationStore(clock),
     uploads: new FakeUploadStore(),
     storage: new FakeStorage(),
-    uploadcare: {
-      async getVerifiedFile() {
-        throw new Error('not faked');
-      },
-    },
+    uploadcare: new FakeUploadInbox(),
     provider: new FakeProvider(),
     // A fresh object per call, so a test can spy on it without affecting others.
     logger: { ...silentLogger },
@@ -283,6 +310,7 @@ export function seedSubmitted(
       width: 640,
       height: 480,
       durationSeconds: kind === 'video' ? 4 : null,
+      frameRate: kind === 'video' ? 24 : null,
     },
     status,
     provider: { projectId, creditsCharged: projectId ? 5 : null, rawError: null },

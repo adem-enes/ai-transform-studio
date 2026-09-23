@@ -1,5 +1,5 @@
 import 'server-only';
-import type { TransformationDoc } from '@/server/db/models';
+import type { TransformationDoc, TransformationOutput } from '@/server/db/models';
 import { AppError } from '@/server/errors';
 import type { StoredAsset } from '@/server/services';
 import type { AppDeps } from './deps';
@@ -52,9 +52,20 @@ export async function finalizeTransformation(
   }
 
   const completed = await transformations.transition(current._id, ['finalizing'], 'completed', {
-    output: { publicId: stored.publicId, secureUrl: stored.secureUrl },
+    output: toStoredOutput(stored),
     error: null,
     completedAt: clock.now(),
   });
   return completed ?? (await transformations.findById(current._id)) ?? current;
+}
+
+/** What is kept of the copied result: where it is, and its real shape so the UI can frame it without guessing. */
+export function toStoredOutput(stored: StoredAsset): TransformationOutput {
+  return {
+    publicId: stored.publicId,
+    secureUrl: stored.secureUrl,
+    width: stored.width,
+    height: stored.height,
+    durationSeconds: stored.durationSeconds,
+  };
 }

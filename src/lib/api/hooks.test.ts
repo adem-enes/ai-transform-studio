@@ -22,9 +22,17 @@ function view(status: TransformationStatus, completedAt: string | null = null): 
       width: 640,
       height: 480,
       durationSeconds: null,
+      frameRate: null,
     },
     output:
-      status === 'completed' ? { url: 'https://res.cloudinary.com/demo/image/upload/v1/out.png' } : null,
+      status === 'completed'
+        ? {
+            url: 'https://res.cloudinary.com/demo/image/upload/v1/out.png',
+            width: 640,
+            height: 480,
+            durationSeconds: null,
+          }
+        : null,
     error: status === 'timed_out' ? { code: 'WEBHOOK_TIMEOUT', message: 'Timed out.' } : null,
     createdAt: NOW.toISOString(),
     completedAt,

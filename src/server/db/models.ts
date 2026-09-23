@@ -19,6 +19,8 @@ import {
 const objectId = z.instanceof(ObjectId);
 const dimension = z.number().int().positive().nullable();
 const durationSeconds = z.number().nonnegative().nullable();
+/** Frames per second of a video. Added after launch, so older documents read as `null`. */
+const frameRate = z.number().positive().nullable().default(null);
 
 // ---------------------------------------------------------------------------
 // uploads
@@ -35,6 +37,7 @@ export const uploadDoc = z.object({
   width: dimension,
   height: dimension,
   durationSeconds,
+  frameRate,
   cloudinary: z.object({
     publicId: z.string(),
     secureUrl: z.url(),
@@ -57,9 +60,16 @@ export const transformationProvider = z.object({
 });
 export type TransformationProvider = z.infer<typeof transformationProvider>;
 
+/**
+ * The stored result. Dimensions and duration are Cloudinary's figures for the
+ * copied file; outputs finalized before they were recorded read as `null`.
+ */
 export const transformationOutput = z.object({
   publicId: z.string(),
   secureUrl: z.url(),
+  width: dimension.default(null),
+  height: dimension.default(null),
+  durationSeconds: durationSeconds.default(null),
 });
 export type TransformationOutput = z.infer<typeof transformationOutput>;
 
@@ -80,6 +90,7 @@ const transformationBase = z.object({
     width: dimension,
     height: dimension,
     durationSeconds,
+    frameRate,
   }),
   status: transformationStatus,
   provider: transformationProvider,

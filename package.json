@@ -20,7 +20,8 @@
     "test": "vitest run",
     "check:services": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/check-services.ts",
     "webhook:replay": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/webhook-replay.ts",
-    "e2e:image": "tsx --env-file-if-exists=.env.local scripts/e2e-image.ts"
+    "e2e:image": "tsx --env-file-if-exists=.env.local scripts/e2e-image.ts",
+    "cleanup:uploadcare": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/cleanup-uploadcare.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.1",
@@ -29,6 +30,7 @@
     "@uploadcare/upload-client": "6.22.0",
     "class-variance-authority": "0.7.1",
     "cloudinary": "2.11.0",
+    "cmdk": "1.1.1",
     "cn": "0.4.0",
     "lucide-react": "1.47.0",
     "magic-hour": "0.78.0",

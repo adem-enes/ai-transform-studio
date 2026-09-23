@@ -149,6 +149,7 @@ function newTransformation(input: CreateTransformationInput, upload: UploadDoc):
       width: upload.width,
       height: upload.height,
       durationSeconds: upload.durationSeconds,
+      frameRate: upload.frameRate,
     },
   };
   return input.kind === 'image'

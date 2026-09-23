@@ -38,6 +38,7 @@ const uploadResult = z.object({
   width: z.number().int().positive().optional(),
   height: z.number().int().positive().optional(),
   duration: z.number().nonnegative().optional(),
+  frame_rate: z.number().positive().optional(),
 });
 
 export type StoredAsset = {
@@ -49,7 +50,21 @@ export type StoredAsset = {
   width: number | null;
   height: number | null;
   durationSeconds: number | null;
+  /** Videos only. */
+  frameRate: number | null;
 };
+
+/**
+ * How long one copy may take before the SDK gives up (its own default is 60 s).
+ * A video is fetched and probed by Cloudinary before the call returns, so it
+ * gets longer — but still well inside the routes' `maxDuration` (300 s), so a
+ * slow copy ends as a clean, retryable `STORAGE_FAILED` rather than the
+ * function being killed mid-request.
+ */
+export const UPLOAD_TIMEOUT_MS = { image: 60_000, video: 180_000 } as const satisfies Record<
+  MediaKind,
+  number
+>;
 
 export type UploadFromUrlOptions = {
   kind: MediaKind;
@@ -75,6 +90,7 @@ export async function uploadFromUrl(
   try {
     response = await client().uploader.upload(url, {
       resource_type: kind,
+      timeout: UPLOAD_TIMEOUT_MS[kind],
       folder: `${ROOT_FOLDER}/${folder}/${kind}`,
       ...(publicId
         ? { public_id: publicId, overwrite: true, invalidate: true }
@@ -88,7 +104,7 @@ export async function uploadFromUrl(
   if (!parsed.success) {
     throw new AppError('STORAGE_FAILED', { cause: parsed.error });
   }
-  const { public_id, secure_url, bytes, format, width, height, duration } = parsed.data;
+  const { public_id, secure_url, bytes, format, width, height, duration, frame_rate } = parsed.data;
   return {
     publicId: public_id,
     secureUrl: secure_url,
@@ -97,6 +113,7 @@ export async function uploadFromUrl(
     width: width ?? null,
     height: height ?? null,
     durationSeconds: duration ?? null,
+    frameRate: frame_rate ?? null,
   };
 }
 

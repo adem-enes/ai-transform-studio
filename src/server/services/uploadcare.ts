@@ -1,5 +1,5 @@
 import 'server-only';
-import { fileInfo, isRestClientError, UploadcareSimpleAuthSchema } from '@uploadcare/rest-client';
+import { deleteFile, fileInfo, isRestClientError, UploadcareSimpleAuthSchema } from '@uploadcare/rest-client';
 import { z } from 'zod';
 import { clientEnv } from '@/lib/env/client';
 import { requireServerEnv } from '@/lib/env/server';
@@ -9,7 +9,7 @@ import { type VerifiedFile, verifyFileInfo } from './uploadcare-file-check';
 
 export type { VerifiedFile } from './uploadcare-file-check';
 
-function authSchema(): UploadcareSimpleAuthSchema {
+export function uploadcareAuthSchema(): UploadcareSimpleAuthSchema {
   const { UPLOADCARE_SECRET_KEY } = requireServerEnv('UPLOADCARE_SECRET_KEY');
   const { NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY } = clientEnv();
   if (!NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY) {
@@ -33,7 +33,7 @@ export async function getVerifiedFile(uuid: string, kind: MediaKind): Promise<Ve
     throw new AppError('UPLOAD_NOT_FOUND');
   }
   try {
-    const info = await fileInfo({ uuid }, { authSchema: authSchema() });
+    const info = await fileInfo({ uuid }, { authSchema: uploadcareAuthSchema() });
     return verifyFileInfo(info, kind);
   } catch (error) {
     if (error instanceof AppError) {
@@ -43,5 +43,27 @@ export async function getVerifiedFile(uuid: string, kind: MediaKind): Promise<Ve
       throw new AppError('UPLOAD_NOT_FOUND', { cause: error });
     }
     throw new AppError('STORAGE_FAILED', { message: 'The upload could not be verified.', cause: error });
+  }
+}
+
+/**
+ * Deletes a file from Uploadcare. A file that is already gone counts as
+ * deleted; anything else is thrown with a sanitized cause (the REST client's
+ * error carries the request, secret included).
+ */
+export async function deleteUploadcareFile(uuid: string): Promise<void> {
+  try {
+    await deleteFile({ uuid }, { authSchema: uploadcareAuthSchema() });
+  } catch (error) {
+    if (isRestClientError(error) && error.status === 404) {
+      return;
+    }
+    throw new AppError('STORAGE_FAILED', {
+      message: 'The Uploadcare file could not be deleted.',
+      cause: {
+        status: isRestClientError(error) ? error.status : null,
+        message: error instanceof Error ? error.message : 'Unrecognized Uploadcare error',
+      },
+    });
   }
 }

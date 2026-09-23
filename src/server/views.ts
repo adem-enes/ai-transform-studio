@@ -14,6 +14,7 @@ export function toUploadView(doc: UploadDoc): UploadView {
     width: doc.width,
     height: doc.height,
     durationSeconds: doc.durationSeconds,
+    frameRate: doc.frameRate,
     url: doc.cloudinary.secureUrl,
     createdAt: doc.createdAt.toISOString(),
   };
@@ -30,8 +31,16 @@ export function toTransformationView(doc: TransformationDoc): TransformationView
       width: doc.source.width,
       height: doc.source.height,
       durationSeconds: doc.source.durationSeconds,
+      frameRate: doc.source.frameRate,
     },
-    output: doc.output ? { url: doc.output.secureUrl } : null,
+    output: doc.output
+      ? {
+          url: doc.output.secureUrl,
+          width: doc.output.width,
+          height: doc.output.height,
+          durationSeconds: doc.output.durationSeconds,
+        }
+      : null,
     error: doc.error ? { code: doc.error.code, message: doc.error.message } : null,
     createdAt: doc.createdAt.toISOString(),
     completedAt: doc.completedAt?.toISOString() ?? null,

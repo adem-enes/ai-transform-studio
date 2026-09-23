@@ -27,7 +27,7 @@ export function appDeps(): AppDeps {
       findByIdForUser: repositories.findUploadByIdForUser,
     },
     storage: { uploadFromUrl: services.uploadFromUrl },
-    uploadcare: { getVerifiedFile: services.getVerifiedFile },
+    uploadcare: { getVerifiedFile: services.getVerifiedFile, deleteFile: services.deleteUploadcareFile },
     provider: {
       submitImage: services.submitImageTransformation,
       submitVideo: services.submitVideoTransformation,

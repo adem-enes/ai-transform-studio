@@ -23,6 +23,7 @@ function seedUpload(
     width: 640,
     height: 480,
     durationSeconds,
+    frameRate: kind === 'video' ? 30 : null,
     cloudinary: {
       publicId: 'ai-transform-studio/sources/x',
       secureUrl: `https://res.cloudinary.com/demo/${kind}/upload/x.${kind === 'image' ? 'png' : 'mp4'}`,

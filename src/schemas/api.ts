@@ -27,6 +27,8 @@ export const uploadView = z.object({
   width: z.number().int().positive().nullable(),
   height: z.number().int().positive().nullable(),
   durationSeconds: z.number().nonnegative().nullable(),
+  /** Frames per second (videos only; `null` when unknown). Feeds the video cost estimate. */
+  frameRate: z.number().positive().nullable(),
   url: z.url(),
   createdAt: z.iso.datetime(),
 });
@@ -56,8 +58,17 @@ const transformationViewBase = z.object({
     width: z.number().int().positive().nullable(),
     height: z.number().int().positive().nullable(),
     durationSeconds: z.number().nonnegative().nullable(),
+    frameRate: z.number().positive().nullable(),
   }),
-  output: z.object({ url: z.url() }).nullable(),
+  /** Dimensions and duration are `null` for results stored before they were recorded. */
+  output: z
+    .object({
+      url: z.url(),
+      width: z.number().int().positive().nullable(),
+      height: z.number().int().positive().nullable(),
+      durationSeconds: z.number().nonnegative().nullable(),
+    })
+    .nullable(),
   error: apiError.nullable(),
   createdAt: z.iso.datetime(),
   completedAt: z.iso.datetime().nullable(),

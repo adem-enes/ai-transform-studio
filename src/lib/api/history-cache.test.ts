@@ -19,6 +19,7 @@ function item(
       width: 1,
       height: 1,
       durationSeconds: null,
+      frameRate: null,
     },
     output: null,
     error: null,

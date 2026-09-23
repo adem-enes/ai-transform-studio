@@ -60,8 +60,11 @@ export type MediaStorage = {
   uploadFromUrl(url: string, options: UploadFromUrlOptions): Promise<StoredAsset>;
 };
 
-export type UploadVerifier = {
+/** Uploadcare, the transit step between the browser and Cloudinary. */
+export type UploadInbox = {
   getVerifiedFile(uuid: string, kind: MediaKind): Promise<VerifiedFile>;
+  /** Removes a file once it has been copied to Cloudinary, the storage of record. */
+  deleteFile(uuid: string): Promise<void>;
 };
 
 export type TransformProvider = {
@@ -78,7 +81,7 @@ export type AppDeps = {
   transformations: TransformationStore;
   uploads: UploadStore;
   storage: MediaStorage;
-  uploadcare: UploadVerifier;
+  uploadcare: UploadInbox;
   provider: TransformProvider;
   clock: Clock;
   logger: Logger;
