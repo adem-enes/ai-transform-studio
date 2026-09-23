@@ -14,12 +14,12 @@ const cache = globalThis as typeof globalThis & {
 };
 
 /** The database name from the URI path. Required so writes never land in the driver's default `test` db. */
-export function databaseNameFromUri(uri: string): string | null {
+function databaseNameFromUri(uri: string): string | null {
   const match = /^mongodb(?:\+srv)?:\/\/[^/]+\/([^?/]+)/.exec(uri);
   return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 
-export function getMongoClient(): Promise<MongoClient> {
+function getMongoClient(): Promise<MongoClient> {
   if (!cache.__mongoClientPromise) {
     const { MONGODB_URI } = requireServerEnv('MONGODB_URI');
     const promise = new MongoClient(MONGODB_URI, { appName: 'ai-transform-studio' }).connect();

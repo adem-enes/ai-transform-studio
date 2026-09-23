@@ -1,5 +1,5 @@
 import 'server-only';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { WebhookOutcome } from '@/server/application';
 import { AppError, isAppError, isRetryable, toErrorResponse } from '@/server/errors';
 import type { Logger } from '@/server/logger';

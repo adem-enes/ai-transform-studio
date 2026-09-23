@@ -1,5 +1,6 @@
 import { type TransformResponse, transformRequest } from '@/schemas';
 import { appDeps, createTransformation } from '@/server/application';
+import { assertSameOrigin } from '@/server/http/origin';
 import { json, parseInput, readJson, withErrorHandling } from '@/server/http/responses';
 import { getOrCreateUserId } from '@/server/identity';
 
@@ -16,6 +17,7 @@ export const maxDuration = 300;
 
 /** Starts a transformation. 202 `{ transformation }`; the result arrives asynchronously. */
 export const POST = withErrorHandling(async (request: Request) => {
+  assertSameOrigin(request);
   const userId = await getOrCreateUserId();
   const input = parseInput(transformRequest, await readJson(request));
   const transformation = await createTransformation({ userId, ...input }, appDeps());

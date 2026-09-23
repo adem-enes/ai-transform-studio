@@ -12,7 +12,7 @@ describe('finalizeTransformation — output dimensions', () => {
     const deps = createFakeDeps();
     const job = seedSubmitted(deps, { kind: 'video', status: 'processing' });
 
-    const done = await finalizeTransformation(job, DOWNLOAD_URL, deps);
+    const done = await finalizeTransformation(job, { downloadUrl: DOWNLOAD_URL }, deps);
 
     expect(done.status).toBe('completed');
     expect(done.output).toMatchObject({ width: 640, height: 480, durationSeconds: 4 });
@@ -28,9 +28,30 @@ describe('finalizeTransformation — output dimensions', () => {
     const deps = createFakeDeps();
     const job = seedSubmitted(deps, { kind: 'image', status: 'processing' });
 
-    const done = await finalizeTransformation(job, DOWNLOAD_URL, deps);
+    const done = await finalizeTransformation(job, { downloadUrl: DOWNLOAD_URL }, deps);
 
     expect(done.output).toMatchObject({ width: 640, height: 480, durationSeconds: null });
+  });
+});
+
+describe('finalizeTransformation — credits', () => {
+  it('records the final credits figure when the provider reports one', async () => {
+    const deps = createFakeDeps();
+    const job = seedSubmitted(deps, { kind: 'video', status: 'processing' });
+
+    const done = await finalizeTransformation(job, { downloadUrl: DOWNLOAD_URL, creditsCharged: 38 }, deps);
+
+    expect(done.provider.creditsCharged).toBe(38);
+    expect(toTransformationView(done).creditsCharged).toBe(38);
+  });
+
+  it('keeps the up-front figure when none is reported', async () => {
+    const deps = createFakeDeps();
+    const job = seedSubmitted(deps, { status: 'processing' });
+
+    const done = await finalizeTransformation(job, { downloadUrl: DOWNLOAD_URL }, deps);
+
+    expect(done.provider.creditsCharged).toBe(5);
   });
 });
 

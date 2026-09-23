@@ -15,9 +15,9 @@ export const SIGNATURE_HEADER = 'magic-hour-event-signature';
 export const TIMESTAMP_HEADER = 'magic-hour-event-timestamp';
 
 /** Replay window, either side of now (the docs' recommended 5 minutes). */
-export const SIGNATURE_TOLERANCE_SECONDS = 5 * 60;
+const SIGNATURE_TOLERANCE_SECONDS = 5 * 60;
 
-export type HeaderSource = Headers | Record<string, string | undefined>;
+type HeaderSource = Headers | Record<string, string | undefined>;
 
 function header(headers: HeaderSource, name: string): string | null {
   if (headers instanceof Headers) {

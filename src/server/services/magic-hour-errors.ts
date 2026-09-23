@@ -1,5 +1,5 @@
 import 'server-only';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { ErrorCode } from '@/schemas';
 import { AppError } from '@/server/errors';
 
@@ -14,7 +14,7 @@ const providerErrorBody = z.object({
 });
 
 /** What went wrong at the provider, for logs and `provider.rawError`. Never sent to clients. */
-export type ProviderFailure = {
+type ProviderFailure = {
   /** HTTP status, or `null` when no response arrived (network error, timeout). */
   status: number | null;
   code: string | null;

@@ -6,7 +6,7 @@ import type { MediaKind, TransformationStatus } from '@/schemas';
 import { useNow } from '../hooks/use-now';
 import { formatElapsed } from '../lib/format';
 
-export type TimelineStep = 'submitting' | 'queued' | 'processing' | 'finalizing' | 'done';
+type TimelineStep = 'submitting' | 'queued' | 'processing' | 'finalizing' | 'done';
 
 const STEPS: readonly { step: TimelineStep; label: string }[] = [
   { step: 'submitting', label: 'Submitting' },

@@ -1,17 +1,10 @@
 'use client';
 
 import { ChevronsUpDownIcon } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { type Control, Controller, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import {
   Field,
   FieldDescription,
@@ -26,7 +19,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import {
-  VIDEO_ART_STYLES,
   VIDEO_FPS_RESOLUTIONS,
   VIDEO_MODELS,
   VIDEO_PROMPT_MAX_LENGTH,
@@ -64,6 +56,18 @@ const optionCard = (disabled?: boolean) =>
  * popup is filtered as you type and navigated with the arrow keys; Enter
  * picks, Escape closes, and focus returns to the trigger either way.
  */
+/** Warms the list's chunk when the user heads for the trigger, so opening rarely shows the fallback. */
+const preloadArtStyleList = () => void import('./art-style-list');
+
+const ArtStyleList = dynamic(() => import('./art-style-list').then((module) => module.ArtStyleList), {
+  ssr: false,
+  loading: () => (
+    <p role="status" className="p-3 text-sm text-muted-foreground">
+      Loading styles…
+    </p>
+  ),
+});
+
 export function ArtStyleField({ control, disabled }: FieldProps) {
   const [open, setOpen] = useState(false);
   const listId = 'art-style-list';
@@ -98,6 +102,8 @@ export function ArtStyleField({ control, disabled }: FieldProps) {
                 aria-invalid={fieldState.invalid}
                 aria-describedby={describedBy('art-style-hint', fieldState.invalid && 'art-style-error')}
                 disabled={disabled}
+                onPointerEnter={preloadArtStyleList}
+                onFocus={preloadArtStyleList}
                 className={cn(
                   'h-10 w-full justify-between font-normal',
                   !field.value && 'text-muted-foreground',
@@ -108,30 +114,14 @@ export function ArtStyleField({ control, disabled }: FieldProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-64 p-0">
-              <Command defaultValue={field.value || undefined}>
-                <CommandInput
-                  placeholder={`Search ${VIDEO_ART_STYLES.length} styles…`}
-                  aria-label="Search art styles"
-                />
-                <CommandList id={listId} aria-label="Art styles">
-                  <CommandEmpty>No style matches.</CommandEmpty>
-                  <CommandGroup>
-                    {VIDEO_ART_STYLES.map((style) => (
-                      <CommandItem
-                        key={style}
-                        value={style}
-                        data-checked={field.value === style}
-                        onSelect={() => {
-                          field.onChange(style);
-                          setOpen(false);
-                        }}
-                      >
-                        {style}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
+              <ArtStyleList
+                listId={listId}
+                value={field.value}
+                onSelect={(style) => {
+                  field.onChange(style);
+                  setOpen(false);
+                }}
+              />
             </PopoverContent>
           </Popover>
           <FieldDescription id="art-style-hint">

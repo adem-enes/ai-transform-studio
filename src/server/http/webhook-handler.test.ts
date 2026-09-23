@@ -1,9 +1,11 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
+import { handleWebhookEvent } from '@/server/application/handle-webhook-event';
+import { createFakeDeps, seedSubmitted } from '@/server/application/testing';
 import { AppError } from '@/server/errors';
 import { silentLogger } from '@/server/logger';
 import { SIGNATURE_HEADER, TIMESTAMP_HEADER } from '@/server/webhooks/verify-signature';
-import { createWebhookHandler, MAX_WEBHOOK_BODY_BYTES } from './webhook-handler';
+import { createWebhookHandler, MAX_WEBHOOK_BODY_BYTES, type WebhookHandlerDeps } from './webhook-handler';
 
 const SECRET = 'whsec_test';
 const NOW_MS = 1_790_000_000_000;
@@ -21,7 +23,12 @@ function request(body: string, { signature = sign(body), headers = {} as Record<
   });
 }
 
-function setup(handle = vi.fn(async () => ({ result: 'applied' as const, status: 'processing' as const }))) {
+function setup(
+  handle: WebhookHandlerDeps['handle'] = vi.fn(async () => ({
+    result: 'applied' as const,
+    status: 'processing' as const,
+  })),
+) {
   const handler = createWebhookHandler({
     secret: () => SECRET,
     nowMs: () => NOW_MS,
@@ -91,5 +98,30 @@ describe('POST /api/webhook', () => {
     const response = await handler(request(body));
     expect(response.status).toBe(400);
     expect(handle).not.toHaveBeenCalled();
+  });
+
+  it('acknowledges a completed event before the result is copied', async () => {
+    const deps = createFakeDeps();
+    const job = seedSubmitted(deps, { status: 'processing' });
+    const { handler } = setup((event) => handleWebhookEvent(event, deps));
+    const body = JSON.stringify({
+      type: 'image.completed',
+      payload: {
+        id: 'proj_1',
+        status: 'complete',
+        downloads: [
+          { url: 'https://videos.magichour.ai/proj_1/out.png', expires_at: '2026-01-02T00:00:00Z' },
+        ],
+      },
+    });
+
+    const response = await handler(request(body));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ received: true, result: 'applied', status: 'finalizing' });
+    expect(deps.storage.calls).toHaveLength(0);
+
+    await deps.deferred.runAll();
+    expect(deps.storage.calls).toHaveLength(1);
+    expect(deps.transformations.get(job._id)?.status).toBe('completed');
   });
 });

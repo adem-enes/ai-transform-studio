@@ -1,5 +1,5 @@
 import 'server-only';
-import type { z } from 'zod';
+import type * as z from 'zod';
 import type { ErrorDetails } from '@/schemas';
 import { AppError, isAppError, toErrorResponse } from '@/server/errors';
 import { logger as defaultLogger, type Logger } from '@/server/logger';
@@ -45,7 +45,7 @@ export function withErrorHandling<Args extends unknown[]>(
 }
 
 /** Zod issues → `{ 'params.end_seconds': ['…'] }`. Issues on the root object are keyed `_`. */
-export function zodDetails(error: z.ZodError): ErrorDetails {
+function zodDetails(error: z.ZodError): ErrorDetails {
   const details: ErrorDetails = {};
   for (const issue of error.issues) {
     const key = issue.path.length > 0 ? issue.path.map(String).join('.') : '_';

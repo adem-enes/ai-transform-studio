@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Lifecycle of a transformation, as this app tracks it (not Magic Hour's own statuses).
@@ -23,7 +23,7 @@ export const TRANSFORMATION_STATUSES = [
 export const transformationStatus = z.enum(TRANSFORMATION_STATUSES);
 export type TransformationStatus = z.infer<typeof transformationStatus>;
 
-export const TERMINAL_STATUSES = [
+const TERMINAL_STATUSES = [
   'completed',
   'failed',
   'timed_out',
@@ -42,7 +42,7 @@ export const TERMINAL_STATUSES = [
  * recovered by a late webhook or by reconciliation, rather than leaving
  * spent credits with a lost result.
  */
-export const ALLOWED_TRANSITIONS = {
+const ALLOWED_TRANSITIONS = {
   queued: ['processing', 'finalizing', 'failed', 'timed_out'],
   processing: ['finalizing', 'failed', 'timed_out'],
   finalizing: ['completed', 'failed'],

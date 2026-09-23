@@ -1,6 +1,6 @@
 import 'server-only';
 import { ObjectId } from 'mongodb';
-import { z } from 'zod';
+import * as z from 'zod';
 import {
   errorCode,
   imageTransformParams,

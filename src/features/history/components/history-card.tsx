@@ -87,9 +87,12 @@ export function HistoryCard({ item, now, preload }: HistoryCardProps) {
             ))}
           </p>
           <h3 className="line-clamp-2 text-sm font-medium break-words">
-            <SheetTrigger className="text-left after:absolute after:inset-0 focus-visible:outline-none">
+            {/* One label string: an sr-only span beside the text gets a stray space in Chrome's computed name. */}
+            <SheetTrigger
+              aria-label={`${title}, ${statusLabel(status)}. View details`}
+              className="text-left after:absolute after:inset-0 focus-visible:outline-none"
+            >
               {title}
-              <span className="sr-only">, {statusLabel(status)}. View details</span>
             </SheetTrigger>
           </h3>
           <p className="mt-auto text-xs text-muted-foreground">
@@ -101,7 +104,7 @@ export function HistoryCard({ item, now, preload }: HistoryCardProps) {
       </article>
       <SheetContent
         side="right"
-        className="w-full gap-0 sm:max-w-lg"
+        className="gap-0 data-[side=right]:w-full data-[side=right]:sm:w-3/4 data-[side=right]:sm:max-w-lg"
         onOpenAutoFocus={(event) => {
           // Radix would focus the first button (Copy); start at the title instead.
           event.preventDefault();

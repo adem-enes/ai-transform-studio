@@ -1,12 +1,12 @@
 {
   "name": "ai-transform-studio",
-  "description": "AI media transformation app — Image-to-Image and Video-to-Video via the Magic Hour API (Next.js App Router)",
+  "description": "Image-to-image and video-to-video transformations with the Magic Hour API: direct uploads, webhook-driven async processing and a per-visitor history (Next.js App Router, MongoDB, Cloudinary, Uploadcare)",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=20.9"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",

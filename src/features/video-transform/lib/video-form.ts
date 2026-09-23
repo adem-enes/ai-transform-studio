@@ -34,7 +34,7 @@ export type VideoFormValues = {
 
 export type VideoFormContext = { durationSeconds: number | null };
 
-export type VideoFormResult =
+type VideoFormResult =
   | { ok: true; params: VideoTransformParams }
   | { ok: false; errors: Partial<Record<keyof VideoFormValues, string>> };
 

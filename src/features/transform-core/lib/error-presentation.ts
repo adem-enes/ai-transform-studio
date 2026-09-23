@@ -3,7 +3,7 @@ import type { ClientErrorCode } from '@/lib/api/errors';
 /** What the user is pointed to do next. The component rendering the error decides how to do it. */
 export type ErrorAction = 'retry' | 'choose-file' | 'edit-params' | 'check-history' | 'none';
 
-export type ErrorPresentation = {
+type ErrorPresentation = {
   title: string;
   description: string;
   action: ErrorAction;
@@ -97,6 +97,12 @@ const PRESENTATIONS = {
     title: 'Request not trusted',
     description: 'This request couldn’t be verified. Reload the page and try again.',
     action: 'retry',
+  },
+  FORBIDDEN_ORIGIN: {
+    title: 'Request blocked',
+    description:
+      'This request came from another site, so it was blocked. Open this app directly and try again.',
+    action: 'none',
   },
   PAYLOAD_TOO_LARGE: {
     title: 'Request too large',

@@ -1,5 +1,6 @@
 import { type UploadResponse, uploadRequest } from '@/schemas';
 import { appDeps, uploadMedia } from '@/server/application';
+import { assertSameOrigin } from '@/server/http/origin';
 import { json, parseInput, readJson, withErrorHandling } from '@/server/http/responses';
 import { getOrCreateUserId } from '@/server/identity';
 
@@ -16,6 +17,7 @@ export const maxDuration = 300;
 
 /** Registers a finished Uploadcare upload. 201 `{ upload }`. */
 export const POST = withErrorHandling(async (request: Request) => {
+  assertSameOrigin(request);
   const userId = await getOrCreateUserId();
   const input = parseInput(uploadRequest, await readJson(request));
   const upload = await uploadMedia({ userId, ...input }, appDeps());

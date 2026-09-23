@@ -15,7 +15,7 @@ export type ClipBounds = {
 export const DEFAULT_MAX_CLIP = MEDIA_LIMITS.video.maxClipSeconds;
 
 /** Rounds to the step, avoiding float drift such as 0.30000000000000004. */
-export function roundToStep(seconds: number): number {
+function roundToStep(seconds: number): number {
   return Math.round(seconds / CLIP_STEP) / (1 / CLIP_STEP);
 }
 

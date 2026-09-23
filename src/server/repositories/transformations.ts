@@ -35,7 +35,7 @@ export type NewTransformation = DistributiveOmit<
 >;
 
 /** Every non-terminal status — a transformation in one of these still has work outstanding. */
-export const ACTIVE_STATUSES: readonly TransformationStatus[] = TRANSFORMATION_STATUSES.filter(
+const ACTIVE_STATUSES: readonly TransformationStatus[] = TRANSFORMATION_STATUSES.filter(
   (status) => !isTerminalStatus(status),
 );
 

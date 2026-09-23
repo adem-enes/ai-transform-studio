@@ -34,6 +34,7 @@ function view(status: TransformationStatus, completedAt: string | null = null): 
           }
         : null,
     error: status === 'timed_out' ? { code: 'WEBHOOK_TIMEOUT', message: 'Timed out.' } : null,
+    creditsCharged: 5,
     createdAt: NOW.toISOString(),
     completedAt,
     params: { prompt: 'make it blue', model: 'default', aspect_ratio: 'auto', resolution: '1k' },

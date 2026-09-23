@@ -1,5 +1,5 @@
 import 'server-only';
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Magic Hour webhook envelope (https://docs.magichour.ai/integration/webhook/event-types).
@@ -9,7 +9,7 @@ import { z } from 'zod';
  *
  * There is no `*.canceled` event: a canceled job only shows up via polling.
  */
-export const WEBHOOK_EVENT_TYPES = [
+const WEBHOOK_EVENT_TYPES = [
   'image.started',
   'image.completed',
   'image.errored',
@@ -31,7 +31,7 @@ export const webhookEvent = z.object({
 });
 export type WebhookEvent = z.infer<typeof webhookEvent>;
 
-export type HandledEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
+type HandledEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
 
 export function isHandledEventType(type: string): type is HandledEventType {
   const handled: readonly string[] = WEBHOOK_EVENT_TYPES;

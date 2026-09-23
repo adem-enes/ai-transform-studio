@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Treats an empty string as absent, so `FOO=` in `.env.local` (or an empty

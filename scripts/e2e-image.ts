@@ -5,7 +5,7 @@
  * End-to-end check of the image flow against a running deployment — the
  * same calls the UI will make:
  *
- *   Uploadcare upload → POST /api/upload → POST /api/transform
+ *   GET /api/upload/signature → signed Uploadcare upload → POST /api/upload → POST /api/transform
  *   → GET /api/transformations/[id] every 3 s until a terminal status.
  *
  * SPENDS MAGIC HOUR CREDITS, so it refuses to run without `--spend-credits`.
@@ -16,9 +16,10 @@
  * as a browser would, so all calls act as one anonymous user.
  *
  * The file goes up through Uploadcare's Upload API (the REST client cannot
- * upload); the REST client then confirms it is stored and ready.
+ * upload), signed with the app's own signature endpoint as the browser's
+ * upload is, so it works with "Signed uploads" required; the REST client then
+ * confirms it is stored and ready.
  */
-import { createHmac } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -81,14 +82,12 @@ async function uploadToUploadcare(path: string): Promise<string> {
   form.set('UPLOADCARE_PUB_KEY', publicKey as string);
   form.set('UPLOADCARE_STORE', '1');
   // A signature is accepted whether or not the project requires signed uploads.
-  const expire = String(Math.floor(Date.now() / 1000) + 10 * 60);
-  form.set('expire', expire);
-  form.set(
-    'signature',
-    createHmac('sha256', secretKey as string)
-      .update(expire)
-      .digest('hex'),
+  const { signature, expire } = await api<{ signature: string; expire: number }>(
+    'GET',
+    '/api/upload/signature',
   );
+  form.set('signature', signature);
+  form.set('expire', String(expire));
   form.set('file', new Blob([bytes], { type: mime }), basename(path));
 
   const response = await fetch('https://upload.uploadcare.com/base/', { method: 'POST', body: form });

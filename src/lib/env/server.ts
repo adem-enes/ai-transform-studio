@@ -1,5 +1,5 @@
 import 'server-only';
-import { z } from 'zod';
+import * as z from 'zod';
 import { optional } from './optional';
 
 /**
@@ -20,7 +20,7 @@ import { optional } from './optional';
  *   the type and throws with the variable's name, so a service never has to
  *   handle `undefined` for configuration it cannot work without.
  */
-export const serverEnvSchema = z.object({
+const serverEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
   /** MongoDB connection string (`mongodb://` or `mongodb+srv://`). */
@@ -48,12 +48,12 @@ export const serverEnvSchema = z.object({
   APP_URL: optional(z.url({ protocol: /^https?$/ }).transform((value) => new URL(value).origin)),
 });
 
-export type ServerEnv = z.infer<typeof serverEnvSchema>;
+type ServerEnv = z.infer<typeof serverEnvSchema>;
 
 type RequiredServerKey = Exclude<keyof ServerEnv, 'NODE_ENV'>;
 
 /** Every variable the running app needs. All of them, today — kept as a list so one can become optional later. */
-export const REQUIRED_SERVER_ENV = [
+const REQUIRED_SERVER_ENV = [
   'MONGODB_URI',
   'CLOUDINARY_CLOUD_NAME',
   'CLOUDINARY_API_KEY',
@@ -99,9 +99,3 @@ export function requireServerEnv<K extends RequiredServerKey>(
   }
   return env as { [P in K]: NonNullable<ServerEnv[P]> };
 }
-
-/**
- * The validated environment. A call rather than an object so the laziness —
- * and the fact that it can throw — is visible at every use site.
- */
-export const serverEnv = loadServerEnv;

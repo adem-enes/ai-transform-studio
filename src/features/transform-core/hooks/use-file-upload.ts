@@ -1,6 +1,6 @@
 import { NetworkError, uploadFile } from '@uploadcare/upload-client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { registerUpload } from '@/lib/api/endpoints';
+import { getUploadSignature, registerUpload } from '@/lib/api/endpoints';
 import { ApiError, type ClientErrorCode, errorCodeOf } from '@/lib/api/errors';
 import { clientEnv } from '@/lib/env/client';
 import type { MediaKind, UploadView } from '@/schemas';
@@ -34,7 +34,14 @@ type Callbacks = {
 };
 
 /**
- * Validate → upload to Uploadcare (real byte progress, cancellable) →
+ * Files above this go up in parallel 5 MB parts, each retried on its own —
+ * Uploadcare's own minimum for multipart, below the SDK's 25 MB default, so
+ * most videos use it. Images (≤ 10 MB) go up in one request.
+ */
+const MULTIPART_MIN_FILE_SIZE = 10 * 1024 * 1024;
+
+/**
+ * Validate → fetch a signed-upload signature → upload to Uploadcare (real byte progress, cancellable) →
  * register with POST /api/upload, which copies the file into Cloudinary.
  * Starting a new file aborts whatever is in flight; a superseded request's
  * result is ignored.
@@ -106,8 +113,12 @@ export function useFileUpload(kind: MediaKind, callbacks: Callbacks) {
             'Uploads are not configured (NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY is missing).',
           );
         }
+        const { signature, expire } = await getUploadSignature(controller.signal);
         const result = await uploadFile(file, {
           publicKey,
+          secureSignature: signature,
+          secureExpire: String(expire),
+          multipartMinFileSize: MULTIPART_MIN_FILE_SIZE,
           store: 'auto',
           fileName: file.name,
           contentType: file.type,

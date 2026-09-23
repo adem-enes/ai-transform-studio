@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
-export const MEDIA_KINDS = ['image', 'video'] as const;
+const MEDIA_KINDS = ['image', 'video'] as const;
 export const mediaKind = z.enum(MEDIA_KINDS);
 export type MediaKind = z.infer<typeof mediaKind>;
 

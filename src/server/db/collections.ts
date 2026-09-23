@@ -4,7 +4,7 @@ import { logger } from '@/server/logger';
 import { getDb } from './client';
 import type { TransformationDoc, UploadDoc } from './models';
 
-export const COLLECTIONS = {
+const COLLECTIONS = {
   uploads: 'uploads',
   transformations: 'transformations',
 } as const;

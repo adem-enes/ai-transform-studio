@@ -128,7 +128,11 @@ async function applyProviderStatus(
       if (!downloadUrl) {
         throw new Error('Magic Hour reports the project complete but lists no downloads');
       }
-      return finalizeTransformation(transformation, downloadUrl, deps);
+      return finalizeTransformation(
+        transformation,
+        { downloadUrl, creditsCharged: project.creditsCharged },
+        deps,
+      );
     }
     case 'error':
     case 'canceled': {

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Machine-readable error codes shared by the API and the UI. The UI keys its
@@ -23,6 +23,7 @@ export const ERROR_CODES = [
   // Generic
   'VALIDATION_FAILED',
   'INVALID_SIGNATURE',
+  'FORBIDDEN_ORIGIN',
   'PAYLOAD_TOO_LARGE',
   'NOT_FOUND',
   'INTERNAL',
@@ -46,6 +47,7 @@ export const ERROR_MESSAGES = {
   WEBHOOK_TIMEOUT: 'The transformation took too long and was stopped.',
   VALIDATION_FAILED: 'Some of the submitted values are invalid.',
   INVALID_SIGNATURE: 'Invalid request signature.',
+  FORBIDDEN_ORIGIN: 'Requests from this origin are not allowed.',
   PAYLOAD_TOO_LARGE: 'The request body is too large.',
   NOT_FOUND: 'Not found.',
   INTERNAL: 'Something went wrong on our side.',

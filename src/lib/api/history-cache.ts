@@ -38,7 +38,7 @@ export function prependHistoryItem(queryClient: QueryClient, item: Transformatio
   }
 }
 
-export function replaceItem(data: HistoryData, item: TransformationView): HistoryData {
+function replaceItem(data: HistoryData, item: TransformationView): HistoryData {
   let changed = false;
   const pages = data.pages.map((page) => {
     const index = page.items.findIndex((existing) => existing.id === item.id);

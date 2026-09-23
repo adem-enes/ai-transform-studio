@@ -22,7 +22,12 @@ import {
   fitClip,
   formatSeconds,
 } from '../lib/clip';
-import { describeVideoCost, estimateVideoCost, VIDEO_CREDITS_PER_FRAME } from '../lib/cost';
+import {
+  describeVideoCost,
+  describeVideoCostFor,
+  estimateVideoCost,
+  VIDEO_CREDITS_PER_FRAME,
+} from '../lib/cost';
 import {
   toVideoFormValues,
   VIDEO_FIELDS,
@@ -219,6 +224,11 @@ export function VideoTransformView() {
               : 'Upload a video to get started.'
           }
           tryAnotherLabel="Try another style"
+          estimateOf={(transformation) =>
+            transformation.kind === 'video'
+              ? describeVideoCostFor(transformation.params, transformation.source.frameRate)
+              : ''
+          }
           renderCompleted={(transformation, afterActions) => (
             <div className="space-y-4">
               <VideoResult transformation={transformation} />

@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import { AppError } from '@/server/errors';
 
 /** Position in a list sorted by `(createdAt desc, _id desc)`. */
-export type HistoryCursor = { createdAt: Date; id: ObjectId };
+type HistoryCursor = { createdAt: Date; id: ObjectId };
 
 export function encodeCursor({ createdAt, id }: HistoryCursor): string {
   return Buffer.from(`${createdAt.getTime()}:${id.toHexString()}`, 'utf8').toString('base64url');

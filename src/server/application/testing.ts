@@ -12,6 +12,7 @@ import type {
   VerifiedFile,
 } from '@/server/services';
 import type { AppDeps, TransformationStore } from './deps';
+import type { Defer } from './handle-webhook-event';
 
 /**
  * In-memory stand-ins for every dependency of the application layer, for
@@ -259,7 +260,24 @@ export class FakeProvider {
   }
 }
 
+/** Stands in for `after()`: holds deferred tasks until the test runs them. */
+export class DeferQueue {
+  readonly tasks: (() => Promise<void>)[] = [];
+  readonly defer: Defer = (task) => {
+    this.tasks.push(task);
+  };
+
+  /** Runs every queued task (including any they queue), in order. */
+  async runAll(): Promise<void> {
+    for (let task = this.tasks.shift(); task; task = this.tasks.shift()) {
+      await task();
+    }
+  }
+}
+
 export type FakeDeps = AppDeps & {
+  defer: Defer;
+  deferred: DeferQueue;
   clock: FakeClock;
   transformations: FakeTransformationStore;
   uploads: FakeUploadStore;
@@ -270,8 +288,11 @@ export type FakeDeps = AppDeps & {
 
 export function createFakeDeps(): FakeDeps {
   const clock = new FakeClock();
+  const deferred = new DeferQueue();
   return {
     clock,
+    deferred,
+    defer: deferred.defer,
     transformations: new FakeTransformationStore(clock),
     uploads: new FakeUploadStore(),
     storage: new FakeStorage(),

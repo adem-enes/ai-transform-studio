@@ -5,8 +5,10 @@ import {
   type TransformationView,
   type TransformRequest,
   transformResponse,
+  type UploadSignatureResponse,
   type UploadView,
   uploadResponse,
+  uploadSignatureResponse,
 } from '@/schemas';
 import { apiRequest } from './client';
 
@@ -18,6 +20,11 @@ export async function registerUpload(
 ): Promise<UploadView> {
   const { upload } = await apiRequest('/api/upload', uploadResponse, { method: 'POST', body: input, signal });
   return upload;
+}
+
+/** Signed-upload parameters for the next Uploadcare upload. */
+export async function getUploadSignature(signal?: AbortSignal): Promise<UploadSignatureResponse> {
+  return apiRequest('/api/upload/signature', uploadSignatureResponse, { signal });
 }
 
 export async function createTransformation(input: TransformRequest): Promise<TransformationView> {

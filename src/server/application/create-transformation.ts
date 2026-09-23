@@ -15,7 +15,7 @@ import type { AppDeps } from './deps';
 import { storedError } from './failures';
 import { reconcileTransformation } from './reconcile-transformation';
 
-export type CreateTransformationInput = { userId: string; uploadId: string } & TransformSpec;
+type CreateTransformationInput = { userId: string; uploadId: string } & TransformSpec;
 
 /**
  * Validates a request against its upload, records it as `queued`, then

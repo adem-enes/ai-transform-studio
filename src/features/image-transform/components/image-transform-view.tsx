@@ -145,6 +145,9 @@ export function ImageTransformView() {
             source ? 'Describe the change and select Transform.' : 'Upload an image to get started.'
           }
           tryAnotherLabel="Try another prompt"
+          estimateOf={(transformation) =>
+            transformation.kind === 'image' ? describeCost(transformation.params.model) : ''
+          }
           renderCompleted={(transformation, afterActions) => (
             <div className="space-y-4">
               <CompareView

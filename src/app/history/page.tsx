@@ -13,10 +13,16 @@ export default function HistoryPage() {
           Transformations made in this browser, newest first. Running ones update on their own.
         </p>
       </div>
-      {/* The filter lives in `?kind=`, read with useSearchParams, which needs a Suspense boundary. */}
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-        <HistoryView />
-      </Suspense>
+      {/*
+        The filter lives in `?kind=`, read with useSearchParams, which needs a Suspense boundary.
+        The min-height reserves the fold, so the static fallback, the skeleton and a short
+        result (or the empty state) never pull the footer up into view as they swap.
+      */}
+      <div className="min-h-[70dvh]">
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+          <HistoryView />
+        </Suspense>
+      </div>
     </div>
   );
 }

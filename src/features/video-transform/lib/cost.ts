@@ -1,4 +1,5 @@
 import type { VideoTransformParams } from '@/schemas';
+import { clipLength } from './clip';
 
 /**
  * Video-to-Video pricing, from Magic Hour's "Models and Credit Costs" page
@@ -14,9 +15,9 @@ import type { VideoTransformParams } from '@/schemas';
 export const VIDEO_CREDITS_PER_FRAME = 48 / 24;
 
 /** The documented reference rate, for when the source frame rate is unknown. */
-export const VIDEO_CREDITS_PER_SECOND_AT_24_FPS = 48;
+const VIDEO_CREDITS_PER_SECOND_AT_24_FPS = 48;
 
-export type VideoCostEstimate =
+type VideoCostEstimate =
   | { kind: 'estimate'; credits: number; outputFps: number }
   /** Source frame rate unknown: only the documented rate can be shown. */
   | { kind: 'rate' };
@@ -43,4 +44,15 @@ export function describeVideoCost(estimate: VideoCostEstimate): string {
   return estimate.kind === 'estimate'
     ? `~${estimate.credits.toLocaleString('en')} credits`
     : `${VIDEO_CREDITS_PER_SECOND_AT_24_FPS} credits per second at 24 fps`;
+}
+
+/** The estimate a finished or running job was submitted with, from its stored parameters. */
+export function describeVideoCostFor(params: VideoTransformParams, sourceFps: number | null): string {
+  return describeVideoCost(
+    estimateVideoCost({
+      clipSeconds: clipLength({ start: params.start_seconds, end: params.end_seconds }),
+      fpsResolution: params.fps_resolution,
+      sourceFps,
+    }),
+  );
 }

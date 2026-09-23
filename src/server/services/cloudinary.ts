@@ -1,6 +1,6 @@
 import 'server-only';
 import { v2 as cloudinary } from 'cloudinary';
-import { z } from 'zod';
+import * as z from 'zod';
 import { requireServerEnv } from '@/lib/env/server';
 import type { MediaKind } from '@/schemas';
 import { AppError } from '@/server/errors';
@@ -61,10 +61,7 @@ export type StoredAsset = {
  * slow copy ends as a clean, retryable `STORAGE_FAILED` rather than the
  * function being killed mid-request.
  */
-export const UPLOAD_TIMEOUT_MS = { image: 60_000, video: 180_000 } as const satisfies Record<
-  MediaKind,
-  number
->;
+const UPLOAD_TIMEOUT_MS = { image: 60_000, video: 180_000 } as const satisfies Record<MediaKind, number>;
 
 export type UploadFromUrlOptions = {
   kind: MediaKind;

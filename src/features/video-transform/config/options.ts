@@ -49,7 +49,3 @@ export const FPS_OPTIONS = {
     description: 'The source’s full frame rate. Smoother, but renders twice the frames and costs more.',
   },
 } as const satisfies Record<VideoFpsResolution, { label: string; description: string }>;
-
-export function promptTypeLabel(promptType: VideoPromptType): string {
-  return PROMPT_TYPE_OPTIONS[promptType].label;
-}

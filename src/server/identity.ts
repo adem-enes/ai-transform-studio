@@ -1,7 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { cookies } from 'next/headers';
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Anonymous user identity — NOT authentication.
@@ -33,7 +33,7 @@ export type CookieOptions = {
   maxAge: number;
 };
 
-export function userIdCookieOptions(): CookieOptions {
+function userIdCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     sameSite: 'lax',

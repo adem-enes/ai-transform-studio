@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { apiError } from './errors';
 import { mediaKind } from './media';
 import { imageTransformSpec, videoTransformSpec } from './transform-params';
@@ -16,7 +16,6 @@ export const uploadRequest = z.object({
   uploadcareUuid: z.uuid(),
   kind: mediaKind,
 });
-export type UploadRequest = z.infer<typeof uploadRequest>;
 
 export const uploadView = z.object({
   id: entityId,
@@ -36,6 +35,15 @@ export type UploadView = z.infer<typeof uploadView>;
 
 export const uploadResponse = z.object({ upload: uploadView });
 export type UploadResponse = z.infer<typeof uploadResponse>;
+
+/** GET /api/upload/signature — Uploadcare signed-upload parameters for one upload. */
+export const uploadSignatureResponse = z.object({
+  /** hex HMAC-SHA256 of `expire`, keyed with the Uploadcare secret key. */
+  signature: z.string().regex(/^[a-f\d]{64}$/),
+  /** Unix seconds after which Uploadcare rejects the signature. */
+  expire: z.number().int().positive(),
+});
+export type UploadSignatureResponse = z.infer<typeof uploadSignatureResponse>;
 
 // ---------------------------------------------------------------------------
 // Transformations
@@ -70,6 +78,12 @@ const transformationViewBase = z.object({
     })
     .nullable(),
   error: apiError.nullable(),
+  /**
+   * Magic Hour credits charged, as it reports them: set at submission (for
+   * video an estimate), corrected when the job completes or fails (a failed
+   * render is refunded). `null` until submitted.
+   */
+  creditsCharged: z.number().int().nonnegative().nullable(),
   createdAt: z.iso.datetime(),
   completedAt: z.iso.datetime().nullable(),
 });
@@ -88,7 +102,7 @@ export type TransformResponse = z.infer<typeof transformResponse>;
 // History
 // ---------------------------------------------------------------------------
 
-export const HISTORY_PAGE_SIZE = { default: 20, max: 50 } as const;
+const HISTORY_PAGE_SIZE = { default: 20, max: 50 } as const;
 
 export const historyQuery = z.object({
   cursor: z.string().min(1).optional(),

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { MediaKind, TransformationView } from '@/schemas';
 import type { PanelState } from '../lib/panel-state';
+import { CostSummary } from './cost-summary';
 import { StatusTimeline, stepForStatus } from './status-timeline';
 import { TransformationError } from './transformation-error';
 
@@ -29,6 +30,8 @@ type ResultPanelProps = {
   emptyMessage: string;
   /** "Try another prompt" / "Try another style". */
   tryAnotherLabel: string;
+  /** The pre-submit cost estimate for a submitted job's parameters, shown beside the actual charge. */
+  estimateOf: (transformation: TransformationView) => string;
   /** The finished result, followed by `afterActions` (try another / start over). */
   renderCompleted: (
     transformation: CompletedTransformation,
@@ -71,9 +74,11 @@ const ACTIVE_NOTES: Record<MediaKind, string> = {
 export function ResultPanel({
   ref: headingRef,
   connectionProblem,
+  estimateOf,
   state,
   ...props
 }: ResultPanelProps & { ref?: React.Ref<HTMLHeadingElement> }) {
+  const submitted = 'transformation' in state ? state.transformation : null;
   return (
     <section
       aria-labelledby="result-heading"
@@ -95,6 +100,8 @@ export function ResultPanel({
         </p>
       ) : null}
 
+      {submitted ? <CostSummary estimate={estimateOf(submitted)} transformation={submitted} /> : null}
+
       <PanelBody state={state} {...props} />
     </section>
   );
@@ -112,7 +119,7 @@ function PanelBody({
   onStartOver,
   onCheckAgain,
   checkingAgain,
-}: Omit<ResultPanelProps, 'connectionProblem'>) {
+}: Omit<ResultPanelProps, 'connectionProblem' | 'estimateOf'>) {
   const afterActions = (
     <>
       <Button type="button" variant="outline" onClick={onTryAnother}>

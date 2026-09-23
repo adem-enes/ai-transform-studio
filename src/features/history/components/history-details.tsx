@@ -3,6 +3,7 @@
 import { ExternalLinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { CostSummary } from '@/features/transform-core/components/cost-summary';
 import { MediaFrame, ratioOf } from '@/features/transform-core/components/media-frame';
 import { CopyLinkButton, ResultActions } from '@/features/transform-core/components/result-actions';
 import { StatusBadge } from '@/features/transform-core/components/status-badge';
@@ -11,7 +12,7 @@ import { formatTimestamp } from '@/features/transform-core/lib/format';
 import { resultRatio } from '@/features/transform-core/lib/result-ratio';
 import { shouldPoll } from '@/lib/api/polling';
 import type { TransformationView } from '@/schemas';
-import { parameterRows, promptOf, thumbnailUrl } from '../lib/describe';
+import { estimatedCostOf, parameterRows, promptOf, thumbnailUrl } from '../lib/describe';
 
 /** Everything recorded about one transformation: status, source and generated URLs, every parameter, timestamps. */
 export function HistoryDetails({
@@ -57,6 +58,7 @@ export function HistoryDetails({
               <span className="text-sm text-muted-foreground">Updates automatically</span>
             ) : null}
           </div>
+          <CostSummary estimate={estimatedCostOf(transformation)} transformation={transformation} />
           {error && (status === 'failed' || status === 'timed_out') ? (
             <TransformationError code={error.code} showHistoryLink={false} />
           ) : null}

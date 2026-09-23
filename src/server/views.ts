@@ -42,6 +42,7 @@ export function toTransformationView(doc: TransformationDoc): TransformationView
         }
       : null,
     error: doc.error ? { code: doc.error.code, message: doc.error.message } : null,
+    creditsCharged: doc.provider.creditsCharged,
     createdAt: doc.createdAt.toISOString(),
     completedAt: doc.completedAt?.toISOString() ?? null,
   };

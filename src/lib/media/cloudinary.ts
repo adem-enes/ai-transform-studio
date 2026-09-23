@@ -7,11 +7,11 @@
  * optimizer.
  */
 
-export const CLOUDINARY_HOST = 'res.cloudinary.com';
+const CLOUDINARY_HOST = 'res.cloudinary.com';
 
 const UPLOAD_SEGMENT = /\/(image|video)\/upload\//;
 
-export function isCloudinaryUrl(url: string): boolean {
+function isCloudinaryUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return (
@@ -25,7 +25,7 @@ export function isCloudinaryUrl(url: string): boolean {
 }
 
 /** Inserts one transformation step (e.g. `f_auto,q_auto`) after `/upload/`. Non-Cloudinary URLs pass through unchanged. */
-export function withTransformation(url: string, transformation: string): string {
+function withTransformation(url: string, transformation: string): string {
   if (!isCloudinaryUrl(url)) {
     return url;
   }

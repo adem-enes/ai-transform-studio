@@ -8,7 +8,7 @@ import type {
   V1VideoToVideoCreateBodyStylePromptTypeEnum,
   V1VideoToVideoCreateBodyStyleVersionEnum,
 } from 'magic-hour/types';
-import { z } from 'zod';
+import * as z from 'zod';
 import { MEDIA_LIMITS } from './media';
 
 /**

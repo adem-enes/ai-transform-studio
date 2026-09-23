@@ -22,7 +22,7 @@ export type Logger = {
 const MAX_DEPTH = 4;
 const REDACTED_KEY = /auth|secret|token|password|api[-_]?key|cookie|signature|^request$|headers/i;
 
-export function safeValue(value: unknown, depth = 0): unknown {
+function safeValue(value: unknown, depth = 0): unknown {
   if (value === null || typeof value !== 'object') {
     return typeof value === 'function' || typeof value === 'symbol' ? undefined : value;
   }

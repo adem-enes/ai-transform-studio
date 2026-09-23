@@ -1,4 +1,5 @@
-import { z } from 'zod';
+import '@/schemas/zod-config';
+import * as z from 'zod';
 import { optional } from './optional';
 
 /**
@@ -12,18 +13,16 @@ import { optional } from './optional';
  *
  * Lazy and presence-checked at startup, exactly like `./server.ts`.
  */
-export const clientEnvSchema = z.object({
+const clientEnvSchema = z.object({
   /** Uploadcare public key for the client-side upload widget. */
   NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY: optional(z.string().min(1)),
 });
 
-export type ClientEnv = z.infer<typeof clientEnvSchema>;
+type ClientEnv = z.infer<typeof clientEnvSchema>;
 
 type ClientKey = keyof ClientEnv;
 
-export const REQUIRED_CLIENT_ENV = [
-  'NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY',
-] as const satisfies readonly ClientKey[];
+const REQUIRED_CLIENT_ENV = ['NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY'] as const satisfies readonly ClientKey[];
 
 let cached: ClientEnv | undefined;
 

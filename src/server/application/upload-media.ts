@@ -3,7 +3,7 @@ import type { MediaKind, UploadView } from '@/schemas';
 import { toUploadView } from '@/server/views';
 import type { AppDeps } from './deps';
 
-export type UploadMediaInput = { userId: string; kind: MediaKind; uploadcareUuid: string };
+type UploadMediaInput = { userId: string; kind: MediaKind; uploadcareUuid: string };
 
 /**
  * Registers a finished Uploadcare upload: re-checks the file server-side,

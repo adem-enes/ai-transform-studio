@@ -1,5 +1,5 @@
 import 'server-only';
 
-export { closeMongoClient, getDb, getMongoClient } from './client';
-export { ensureIndexes, transformationsCollection, uploadsCollection } from './collections';
+export { closeMongoClient, getDb } from './client';
+export { ensureIndexes } from './collections';
 export type * from './models';

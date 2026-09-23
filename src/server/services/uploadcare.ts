@@ -1,13 +1,19 @@
 import 'server-only';
 import { deleteFile, fileInfo, isRestClientError, UploadcareSimpleAuthSchema } from '@uploadcare/rest-client';
-import { z } from 'zod';
+import * as z from 'zod';
 import { clientEnv } from '@/lib/env/client';
 import { requireServerEnv } from '@/lib/env/server';
 import type { MediaKind } from '@/schemas';
 import { AppError } from '@/server/errors';
 import { type VerifiedFile, verifyFileInfo } from './uploadcare-file-check';
+import { signUpload } from './uploadcare-signature';
 
 export type { VerifiedFile } from './uploadcare-file-check';
+
+/** Signed-upload parameters for one browser upload, valid for `UPLOAD_SIGNATURE_TTL_SECONDS`. */
+export function createUploadSignature(nowMs: number): { signature: string; expire: number } {
+  return signUpload(requireServerEnv('UPLOADCARE_SECRET_KEY').UPLOADCARE_SECRET_KEY, nowMs);
+}
 
 export function uploadcareAuthSchema(): UploadcareSimpleAuthSchema {
   const { UPLOADCARE_SECRET_KEY } = requireServerEnv('UPLOADCARE_SECRET_KEY');
@@ -40,9 +46,12 @@ export async function getVerifiedFile(uuid: string, kind: MediaKind): Promise<Ve
       throw error;
     }
     if (isRestClientError(error) && error.status === 404) {
-      throw new AppError('UPLOAD_NOT_FOUND', { cause: error });
+      throw new AppError('UPLOAD_NOT_FOUND', { cause: restErrorSummary(error) });
     }
-    throw new AppError('STORAGE_FAILED', { message: 'The upload could not be verified.', cause: error });
+    throw new AppError('STORAGE_FAILED', {
+      message: 'The upload could not be verified.',
+      cause: restErrorSummary(error),
+    });
   }
 }
 
@@ -60,10 +69,15 @@ export async function deleteUploadcareFile(uuid: string): Promise<void> {
     }
     throw new AppError('STORAGE_FAILED', {
       message: 'The Uploadcare file could not be deleted.',
-      cause: {
-        status: isRestClientError(error) ? error.status : null,
-        message: error instanceof Error ? error.message : 'Unrecognized Uploadcare error',
-      },
+      cause: restErrorSummary(error),
     });
   }
+}
+
+/** The REST client's error carries the request, secret key included: keep only its status and message. */
+function restErrorSummary(error: unknown): { status: number | null; message: string } {
+  return {
+    status: isRestClientError(error) ? (error.status ?? null) : null,
+    message: error instanceof Error ? error.message : 'Unrecognized Uploadcare error',
+  };
 }

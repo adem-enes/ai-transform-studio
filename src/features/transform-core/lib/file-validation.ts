@@ -1,7 +1,7 @@
 import { isAllowedMime, MEDIA_LIMITS, type MediaKind } from '@/schemas';
 import { formatBytes } from './format';
 
-export type FileValidation =
+type FileValidation =
   | { ok: true }
   | { ok: false; code: 'INVALID_FILE_TYPE' | 'FILE_TOO_LARGE'; message: string };
 

@@ -1,5 +1,6 @@
 import {
   ASPECT_RATIO_LABELS,
+  describeCost,
   IMAGE_MODEL_INFO,
   RESOLUTION_LABELS,
 } from '@/features/image-transform/config/models';
@@ -9,6 +10,7 @@ import {
   VIDEO_MODEL_LABELS,
   VIDEO_VERSION_LABELS,
 } from '@/features/video-transform/config/options';
+import { describeVideoCostFor } from '@/features/video-transform/lib/cost';
 import { videoPosterUrl } from '@/lib/media/cloudinary';
 import type { TransformationView } from '@/schemas';
 
@@ -42,6 +44,13 @@ export function keyParams(transformation: TransformationView): string[] {
   }
   const { art_style, start_seconds, end_seconds } = transformation.params;
   return [art_style, `${formatSeconds(start_seconds)}–${formatSeconds(end_seconds)} s`];
+}
+
+/** The cost estimate the form showed for these parameters. */
+export function estimatedCostOf(transformation: TransformationView): string {
+  return transformation.kind === 'image'
+    ? describeCost(transformation.params.model)
+    : describeVideoCostFor(transformation.params, transformation.source.frameRate);
 }
 
 /** The prompt, if the transformation has one worth showing. */
