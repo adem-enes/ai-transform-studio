@@ -9,6 +9,7 @@
     "ignoreUnknown": false,
     "includes": [
       "src/**",
+      "scripts/**",
       "*.ts",
       "*.mts",
       "*.mjs",
@@ -80,7 +81,7 @@
       }
     },
     {
-      "includes": ["src/instrumentation.ts", "src/instrumentation.node.ts"],
+      "includes": ["src/instrumentation.ts", "src/instrumentation.node.ts", "scripts/**"],
       "linter": {
         "rules": {
           "suspicious": {

@@ -10,6 +10,8 @@ pre-push:
   commands:
     typecheck:
       run: npm run typecheck
+    test:
+      run: npm test
 
 commit-msg:
   commands:
