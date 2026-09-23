@@ -1,35 +1,44 @@
 'use client';
 
-import { ImageIcon, RefreshCwIcon, RotateCcwIcon, WandSparklesIcon, WifiOffIcon } from 'lucide-react';
+import {
+  ImageIcon,
+  RefreshCwIcon,
+  RotateCcwIcon,
+  VideoIcon,
+  WandSparklesIcon,
+  WifiOffIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CompareView } from '@/features/transform-core/components/compare-view';
-import { MediaFrame, ratioOf } from '@/features/transform-core/components/media-frame';
-import { ResultActions } from '@/features/transform-core/components/result-actions';
-import { StatusTimeline, stepForStatus } from '@/features/transform-core/components/status-timeline';
-import { TransformationError } from '@/features/transform-core/components/transformation-error';
-import { truncate } from '@/features/transform-core/lib/format';
-import type { SourceMedia } from '@/features/transform-core/lib/source';
-import type { ClientErrorCode } from '@/lib/api/errors';
-import type { TransformationView } from '@/schemas';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { MediaKind, TransformationView } from '@/schemas';
+import type { PanelState } from '../lib/panel-state';
+import { StatusTimeline, stepForStatus } from './status-timeline';
+import { TransformationError } from './transformation-error';
 
-export type PanelState =
-  | { kind: 'empty' }
-  | { kind: 'submitting'; startedAt: number }
-  | { kind: 'loading' }
-  | { kind: 'load-error'; code: ClientErrorCode }
-  | { kind: 'active'; transformation: TransformationView }
-  | { kind: 'completed'; transformation: TransformationView }
-  | { kind: 'failed'; transformation: TransformationView }
-  | { kind: 'timed_out'; transformation: TransformationView; stillChecking: boolean };
+/** A finished transformation, with its output guaranteed. */
+export type CompletedTransformation = TransformationView & {
+  output: NonNullable<TransformationView['output']>;
+};
 
 type ResultPanelProps = {
+  kind: MediaKind;
   state: PanelState;
-  source: SourceMedia | null;
-  /** Width ÷ height the result is expected to have — the chosen ratio, else the source's. */
-  resultRatio: number;
+  /** Width ÷ height of the empty placeholder — the expected shape of the result. */
+  placeholderRatio: number;
+  /** The empty placeholder's line, e.g. "Upload an image to get started." */
+  emptyMessage: string;
+  /** "Try another prompt" / "Try another style". */
+  tryAnotherLabel: string;
+  /** The finished result, followed by `afterActions` (try another / start over). */
+  renderCompleted: (
+    transformation: CompletedTransformation,
+    afterActions: React.ReactNode,
+  ) => React.ReactNode;
+  /** The source, shown above a timed-out job's explanation. */
+  renderTimedOutSource: (transformation: TransformationView) => React.ReactNode;
   /** A poll failed but earlier data is still shown. */
   connectionProblem: boolean;
-  onTryAnotherPrompt: () => void;
+  onTryAnother: () => void;
   onStartOver: () => void;
   onCheckAgain: () => void;
   checkingAgain: boolean;
@@ -46,21 +55,24 @@ const HEADINGS: Record<PanelState['kind'], string> = {
   timed_out: 'Still waiting',
 };
 
+/** What to expect while a job runs, per kind. */
+const ACTIVE_NOTES: Record<MediaKind, string> = {
+  image: 'You can leave this page — the result is saved to History when it’s ready.',
+  video:
+    'Video jobs usually take a few minutes. You can leave this page — the result will be in History when it’s ready.',
+};
+
 /**
- * The right-hand panel of the image page: placeholder → progress → result
+ * The right-hand panel of a transform page: placeholder → progress → result
  * or error. The heading is focusable so the page can move focus to it when
- * the panel appears and when the result arrives.
+ * the panel appears and when the result arrives. What a finished result looks
+ * like is the page's own (`renderCompleted`).
  */
 export function ResultPanel({
   ref: headingRef,
-  state,
-  source,
-  resultRatio,
   connectionProblem,
-  onTryAnotherPrompt,
-  onStartOver,
-  onCheckAgain,
-  checkingAgain,
+  state,
+  ...props
 }: ResultPanelProps & { ref?: React.Ref<HTMLHeadingElement> }) {
   return (
     <section
@@ -83,33 +95,29 @@ export function ResultPanel({
         </p>
       ) : null}
 
-      <PanelBody
-        state={state}
-        source={source}
-        resultRatio={resultRatio}
-        onTryAnotherPrompt={onTryAnotherPrompt}
-        onStartOver={onStartOver}
-        onCheckAgain={onCheckAgain}
-        checkingAgain={checkingAgain}
-      />
+      <PanelBody state={state} {...props} />
     </section>
   );
 }
 
 function PanelBody({
+  kind,
   state,
-  source,
-  resultRatio,
-  onTryAnotherPrompt,
+  placeholderRatio,
+  emptyMessage,
+  tryAnotherLabel,
+  renderCompleted,
+  renderTimedOutSource,
+  onTryAnother,
   onStartOver,
   onCheckAgain,
   checkingAgain,
 }: Omit<ResultPanelProps, 'connectionProblem'>) {
   const afterActions = (
     <>
-      <Button type="button" variant="outline" onClick={onTryAnotherPrompt}>
+      <Button type="button" variant="outline" onClick={onTryAnother}>
         <WandSparklesIcon aria-hidden="true" />
-        Try another prompt
+        {tryAnotherLabel}
       </Button>
       <Button type="button" variant="ghost" onClick={onStartOver}>
         <RotateCcwIcon aria-hidden="true" />
@@ -117,6 +125,7 @@ function PanelBody({
       </Button>
     </>
   );
+  const PlaceholderIcon = kind === 'image' ? ImageIcon : VideoIcon;
 
   switch (state.kind) {
     case 'empty':
@@ -124,24 +133,24 @@ function PanelBody({
         <div className="space-y-3">
           <div
             className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center text-sm text-muted-foreground"
-            style={{ aspectRatio: String(Math.min(Math.max(resultRatio, 0.75), 16 / 9)) }}
+            style={{ aspectRatio: String(Math.min(Math.max(placeholderRatio, 0.75), 16 / 9)) }}
           >
-            <ImageIcon aria-hidden="true" className="size-8" />
-            <p>{source ? 'Describe the change and select Transform.' : 'Upload an image to get started.'}</p>
+            <PlaceholderIcon aria-hidden="true" className="size-8" />
+            <p>{emptyMessage}</p>
           </div>
           <p className="text-sm text-muted-foreground">Your result will appear here, next to the original.</p>
         </div>
       );
 
     case 'submitting':
-      return <StatusTimeline step="submitting" kind="image" startedAt={state.startedAt} />;
+      return <StatusTimeline step="submitting" kind={kind} startedAt={state.startedAt} />;
 
     case 'loading':
       return (
         <div role="status" className="space-y-3">
           <span className="sr-only">Loading transformation…</span>
-          <div className="h-4 w-2/3 animate-pulse rounded bg-muted motion-reduce:animate-none" />
-          <div className="h-40 animate-pulse rounded-lg bg-muted motion-reduce:animate-none" />
+          <Skeleton className="h-4 w-2/3 rounded" />
+          <Skeleton className="h-40 rounded-lg" />
         </div>
       );
 
@@ -160,14 +169,12 @@ function PanelBody({
         <div className="space-y-4">
           <StatusTimeline
             step={stepForStatus(state.transformation.status)}
-            kind="image"
+            kind={kind}
             startedAt={state.transformation.createdAt}
           />
           <div className="space-y-2 border-t pt-4">
-            <p className="text-sm text-muted-foreground">
-              You can leave this page — the result is saved to History when it’s ready.
-            </p>
-            <Button type="button" variant="outline" onClick={onTryAnotherPrompt}>
+            <p className="text-sm text-muted-foreground">{ACTIVE_NOTES[kind]}</p>
+            <Button type="button" variant="outline" onClick={onTryAnother}>
               <WandSparklesIcon aria-hidden="true" />
               Start another
             </Button>
@@ -177,30 +184,18 @@ function PanelBody({
 
     case 'completed': {
       const { transformation } = state;
-      if (!transformation.output || transformation.kind !== 'image') {
+      const { output } = transformation;
+      if (!output || transformation.kind !== kind) {
         return <TransformationError code="INTERNAL">{afterActions}</TransformationError>;
       }
-      return (
-        <div className="space-y-4">
-          <CompareView
-            before={{ url: transformation.source.url, alt: 'Original image' }}
-            after={{
-              url: transformation.output.url,
-              alt: `Result for prompt: ${truncate(transformation.params.prompt, 140)}`,
-            }}
-            aspectRatio={resultRatio}
-          />
-          <ResultActions url={transformation.output.url} downloadName={`ai-transform-${transformation.id}`} />
-          <div className="flex flex-wrap gap-2 border-t pt-4">{afterActions}</div>
-        </div>
-      );
+      return renderCompleted({ ...transformation, output }, afterActions);
     }
 
     case 'failed':
       return (
         <TransformationError
           code={state.transformation.error?.code ?? 'TRANSFORMATION_FAILED'}
-          actions={{ 'edit-params': onTryAnotherPrompt, retry: onTryAnotherPrompt }}
+          actions={{ 'edit-params': onTryAnother, retry: onTryAnother }}
         >
           <Button type="button" variant="ghost" onClick={onStartOver}>
             <RotateCcwIcon aria-hidden="true" />
@@ -212,13 +207,7 @@ function PanelBody({
     case 'timed_out':
       return (
         <div className="space-y-4">
-          <MediaFrame
-            src={state.transformation.source.url}
-            alt="Original image"
-            aspectRatio={ratioOf(state.transformation.source.width, state.transformation.source.height)}
-            sizes="(min-width: 1024px) 480px, 100vw"
-            className="max-h-64"
-          />
+          {renderTimedOutSource(state.transformation)}
           <TransformationError
             code="WEBHOOK_TIMEOUT"
             note={

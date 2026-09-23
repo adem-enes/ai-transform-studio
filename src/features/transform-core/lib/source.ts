@@ -11,6 +11,9 @@ export type SourceMedia = {
   url: string;
   width: number | null;
   height: number | null;
+  /** Videos only; `null` for images and when unknown. */
+  durationSeconds: number | null;
+  frameRate: number | null;
   filename: string | null;
   bytes: number | null;
 };
@@ -22,6 +25,8 @@ export function sourceFromUpload(upload: UploadView): SourceMedia {
     url: upload.url,
     width: upload.width,
     height: upload.height,
+    durationSeconds: upload.durationSeconds,
+    frameRate: upload.frameRate,
     filename: upload.filename,
     bytes: upload.bytes,
   };
@@ -34,6 +39,8 @@ export function sourceFromTransformation(transformation: TransformationView): So
     url: transformation.source.url,
     width: transformation.source.width,
     height: transformation.source.height,
+    durationSeconds: transformation.source.durationSeconds,
+    frameRate: transformation.source.frameRate,
     filename: null,
     bytes: null,
   };

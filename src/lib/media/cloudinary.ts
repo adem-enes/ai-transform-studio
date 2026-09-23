@@ -37,12 +37,26 @@ export function imageUrl(url: string, { width, quality }: { width: number; quali
   return withTransformation(url, `f_auto,c_limit,w_${Math.round(width)},q_${quality ?? 'auto'}`);
 }
 
-/** A still frame of a Cloudinary video, as a JPEG URL the image loader can resize further. */
-export function videoPosterUrl(url: string): string {
+/**
+ * A still frame of a Cloudinary video (the first, or the one at `offsetSeconds`)
+ * as a JPEG URL the image loader can resize further. Non-Cloudinary URLs pass
+ * through unchanged.
+ */
+export function videoPosterUrl(url: string, offsetSeconds = 0): string {
   if (!isCloudinaryUrl(url)) {
     return url;
   }
-  return withTransformation(url, 'so_0').replace(/\.[a-z0-9]+$/i, '.jpg');
+  return withTransformation(url, `so_${seconds(offsetSeconds)}`).replace(/\.[a-z0-9]+$/i, '.jpg');
+}
+
+/** The part of a Cloudinary video between `start` and `end` seconds, trimmed on the CDN. */
+export function videoClipUrl(url: string, start: number, end: number): string {
+  return withTransformation(url, `so_${seconds(start)},eo_${seconds(end)}`);
+}
+
+/** Cloudinary offsets take up to two decimals. */
+function seconds(value: number): string {
+  return String(Math.round(Math.max(0, value) * 100) / 100);
 }
 
 /**

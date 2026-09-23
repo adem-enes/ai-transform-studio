@@ -144,7 +144,11 @@ function EmptyState({ kind }: { kind: MediaKind | undefined }) {
         </p>
       </div>
       <Button asChild size="lg">
-        <Link href="/image">Transform an image</Link>
+        {kind === 'video' ? (
+          <Link href="/video">Transform a video</Link>
+        ) : (
+          <Link href="/image">Transform an image</Link>
+        )}
       </Button>
     </div>
   );

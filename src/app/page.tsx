@@ -66,15 +66,20 @@ export default function HomePage() {
             <Card className="h-full transition-shadow group-hover:shadow-lg">
               <CardHeader className="gap-3">
                 <Badge variant="outline" className="w-fit">
-                  Coming soon
+                  Uses more credits
                 </Badge>
                 <VideoIcon aria-hidden="true" className="size-8 text-muted-foreground" />
                 <h2 className="text-xl font-semibold">Video to Video</h2>
               </CardHeader>
               <CardContent className="flex items-end justify-between gap-4">
-                <CardDescription>Apply an AI style to a short video clip.</CardDescription>
+                <div className="space-y-1.5">
+                  <CardDescription>Apply an AI art style to a clip of up to 5 seconds.</CardDescription>
+                  <p className="text-xs text-muted-foreground">
+                    Billed per rendered frame, so a video costs more credits than an image.
+                  </p>
+                </div>
                 <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium">
-                  Learn more
+                  Start
                   <ArrowRightIcon
                     aria-hidden="true"
                     className="size-4 transition-transform motion-safe:group-hover:translate-x-1"

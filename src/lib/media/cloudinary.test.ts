@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attachmentUrl, imageUrl, videoPosterUrl } from './cloudinary';
+import { attachmentUrl, imageUrl, videoClipUrl, videoPosterUrl } from './cloudinary';
 
 const IMAGE = 'https://res.cloudinary.com/demo/image/upload/v1712/ai-transform-studio/outputs/image/abc.png';
 const VIDEO = 'https://res.cloudinary.com/demo/video/upload/v1712/ai-transform-studio/sources/video/clip.mp4';
@@ -27,6 +27,19 @@ describe('cloudinary delivery URLs', () => {
   it('builds a JPEG poster frame for a video', () => {
     expect(videoPosterUrl(VIDEO)).toBe(
       'https://res.cloudinary.com/demo/video/upload/so_0/v1712/ai-transform-studio/sources/video/clip.jpg',
+    );
+  });
+
+  it('builds a poster at an offset, and a trimmed clip', () => {
+    expect(videoPosterUrl(VIDEO, 2.345)).toContain('/upload/so_2.35/v1712/');
+    expect(videoClipUrl(VIDEO, 1.5, 4)).toBe(
+      'https://res.cloudinary.com/demo/video/upload/so_1.5,eo_4/v1712/ai-transform-studio/sources/video/clip.mp4',
+    );
+  });
+
+  it('downloads a video as an attachment, keeping the .mp4', () => {
+    expect(attachmentUrl(VIDEO, 'ai-transform-1')).toBe(
+      'https://res.cloudinary.com/demo/video/upload/fl_attachment:ai-transform-1/v1712/ai-transform-studio/sources/video/clip.mp4',
     );
   });
 });

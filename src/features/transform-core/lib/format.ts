@@ -23,6 +23,14 @@ export function formatElapsed(totalSeconds: number): string {
   return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+/** A media length: 12.84 → "12.8 s"; 75 → "1:15". */
+export function formatDuration(totalSeconds: number): string {
+  if (totalSeconds < 60) {
+    return `${String(Math.round(totalSeconds * 10) / 10)} s`;
+  }
+  return formatElapsed(totalSeconds);
+}
+
 const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['year', 365 * 24 * 3600],

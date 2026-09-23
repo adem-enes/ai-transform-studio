@@ -3,13 +3,35 @@ import {
   IMAGE_MODEL_INFO,
   RESOLUTION_LABELS,
 } from '@/features/image-transform/config/models';
+import {
+  FPS_OPTIONS,
+  PROMPT_TYPE_OPTIONS,
+  VIDEO_MODEL_LABELS,
+  VIDEO_VERSION_LABELS,
+} from '@/features/video-transform/config/options';
 import { videoPosterUrl } from '@/lib/media/cloudinary';
 import type { TransformationView } from '@/schemas';
 
-/** The card thumbnail: the result once there is one, otherwise the source. Videos use a still frame. */
+/**
+ * The card thumbnail: the result once there is one, otherwise the source.
+ * Videos use a still frame — the result's first, or the source's at the clip start.
+ */
 export function thumbnailUrl(transformation: TransformationView): string {
-  const url = transformation.output?.url ?? transformation.source.url;
-  return transformation.kind === 'video' ? videoPosterUrl(url) : url;
+  if (transformation.kind === 'image') {
+    return transformation.output?.url ?? transformation.source.url;
+  }
+  return transformation.output
+    ? videoPosterUrl(transformation.output.url)
+    : videoPosterUrl(transformation.source.url, transformation.params.start_seconds);
+}
+
+/** Length of a video transformation: the stored result's, else the requested clip's. `null` for images. */
+export function videoDurationOf(transformation: TransformationView): number | null {
+  if (transformation.kind !== 'video') {
+    return null;
+  }
+  const { params, output } = transformation;
+  return output?.durationSeconds ?? params.end_seconds - params.start_seconds;
 }
 
 /** One-line summary of the key parameters, for the card. */
@@ -50,12 +72,20 @@ export function parameterRows(transformation: TransformationView): { label: stri
   const p = transformation.params;
   return [
     { label: 'Art style', value: p.art_style },
-    { label: 'Clip', value: `${formatSeconds(p.start_seconds)} s to ${formatSeconds(p.end_seconds)} s` },
-    { label: 'Frame rate', value: p.fps_resolution === 'HALF' ? 'Half' : 'Full' },
-    { label: 'Model', value: p.model },
-    { label: 'Version', value: p.version },
-    { label: 'Prompt type', value: p.prompt_type },
-    ...(p.prompt ? [{ label: 'Prompt', value: p.prompt }] : []),
+    { label: 'Model', value: VIDEO_MODEL_LABELS[p.model] },
+    { label: 'Version', value: VIDEO_VERSION_LABELS[p.version] },
+    { label: 'Prompt type', value: PROMPT_TYPE_OPTIONS[p.prompt_type].label },
+    { label: 'Prompt', value: p.prompt ?? 'None — the art style’s own prompt' },
+    {
+      label: 'Frame rate',
+      value: `${FPS_OPTIONS[p.fps_resolution].label} — ${p.fps_resolution === 'FULL' ? 'the source frame rate' : 'half the source frame rate'}`,
+    },
+    {
+      label: 'Clip',
+      value: `${formatSeconds(p.start_seconds)} s to ${formatSeconds(p.end_seconds)} s (${formatSeconds(
+        p.end_seconds - p.start_seconds,
+      )} s)`,
+    },
   ];
 }
 

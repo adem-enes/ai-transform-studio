@@ -35,13 +35,17 @@ function describeStep(step: TimelineStep, kind: MediaKind): string {
     case 'submitting':
       return `Sending your ${kind} to the AI service…`;
     case 'queued':
-      return 'Waiting for the AI service to start. This usually takes a few seconds.';
+      return kind === 'image'
+        ? 'Waiting for the AI service to start. This usually takes a few seconds.'
+        : 'Waiting for the AI service to start. Video jobs can queue for a little while.';
     case 'processing':
       return kind === 'image'
         ? 'The AI is transforming your image. Most images take under a minute.'
-        : 'The AI is transforming your video. This can take several minutes.';
+        : 'The AI is restyling your video, frame by frame. Video jobs usually take a few minutes.';
     case 'finalizing':
-      return 'Almost there — saving your result.';
+      return kind === 'image'
+        ? 'Almost there — saving your result.'
+        : 'Almost there — saving your video. Larger clips take a moment to copy.';
     case 'done':
       return 'Your result is ready.';
   }

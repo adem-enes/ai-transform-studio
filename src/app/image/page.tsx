@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ImageTransformView } from '@/features/image-transform';
 
 export const metadata: Metadata = { title: 'Image to Image' };
@@ -25,8 +26,8 @@ function ImagePageFallback() {
   return (
     <div role="status" className="grid gap-8 lg:grid-cols-2">
       <span className="sr-only">Loading…</span>
-      <div className="h-96 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
-      <div className="h-96 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
+      <Skeleton className="h-96 rounded-xl" />
+      <Skeleton className="h-96 rounded-xl" />
     </div>
   );
 }

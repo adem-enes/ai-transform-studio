@@ -3,15 +3,17 @@
 import { FileImageIcon, FileVideoIcon, UploadIcon, XIcon } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { videoPosterUrl } from '@/lib/media/cloudinary';
 import { cn } from '@/lib/utils';
 import { MEDIA_LIMITS, type MediaKind, type UploadView } from '@/schemas';
 import { type UploadPhase, useFileUpload } from '../hooks/use-file-upload';
 import { getErrorPresentation } from '../lib/error-presentation';
 import { acceptAttribute, describeAllowedTypes } from '../lib/file-validation';
-import { formatBytes } from '../lib/format';
+import { formatBytes, formatDuration } from '../lib/format';
 import { type SourceMedia, sourceFromUpload } from '../lib/source';
 import { MediaFrame } from './media-frame';
 import { TransformationError } from './transformation-error';
+import { VideoPlayer } from './video-player';
 
 type FileDropzoneProps = {
   kind: MediaKind;
@@ -21,6 +23,11 @@ type FileDropzoneProps = {
   /** Id of the heading that names this upload step. */
   labelledBy: string;
   disabled?: boolean;
+  /**
+   * Replaces the ready state's preview — e.g. a video player the page
+   * controls. Defaults to an image frame, or a video player for videos.
+   */
+  renderPreview?: (value: SourceMedia) => React.ReactNode;
 };
 
 /** Preview box shared by every state, so switching between them never changes the height. */
@@ -31,7 +38,14 @@ const PREVIEW_CLASS = 'aspect-[16/10]';
  * progress (cancellable) and stored, then handed to the parent. Knows nothing
  * about transformation parameters.
  */
-export function FileDropzone({ kind, value, onChange, labelledBy, disabled = false }: FileDropzoneProps) {
+export function FileDropzone({
+  kind,
+  value,
+  onChange,
+  labelledBy,
+  disabled = false,
+  renderPreview,
+}: FileDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const zoneRef = useRef<HTMLFieldSetElement>(null);
   const previousRef = useRef<SourceMedia | null>(null);
@@ -203,12 +217,23 @@ export function FileDropzone({ kind, value, onChange, labelledBy, disabled = fal
         </div>
       ) : value ? (
         <div className="space-y-3">
-          <MediaFrame
-            src={value.url}
-            alt={value.filename ? `Uploaded ${noun}: ${value.filename}` : `Uploaded ${noun}`}
-            aspectRatio={16 / 10}
-            sizes="(min-width: 1024px) 480px, 100vw"
-          />
+          {renderPreview ? (
+            renderPreview(value)
+          ) : kind === 'video' ? (
+            <VideoPlayer
+              src={value.url}
+              poster={videoPosterUrl(value.url)}
+              label={value.filename ? `Uploaded video: ${value.filename}` : 'Uploaded video'}
+              aspectRatio={16 / 10}
+            />
+          ) : (
+            <MediaFrame
+              src={value.url}
+              alt={value.filename ? `Uploaded ${noun}: ${value.filename}` : `Uploaded ${noun}`}
+              aspectRatio={16 / 10}
+              sizes="(min-width: 1024px) 480px, 100vw"
+            />
+          )}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0 text-sm">
               <p className="truncate font-medium">{value.filename ?? `Your earlier ${noun}`}</p>
@@ -216,6 +241,7 @@ export function FileDropzone({ kind, value, onChange, labelledBy, disabled = fal
                 {[
                   value.bytes === null ? null : formatBytes(value.bytes),
                   value.width && value.height ? `${value.width} × ${value.height}` : null,
+                  value.durationSeconds === null ? null : formatDuration(value.durationSeconds),
                 ]
                   .filter(Boolean)
                   .join(' · ') || 'Ready'}
@@ -270,7 +296,9 @@ export function FileDropzone({ kind, value, onChange, labelledBy, disabled = fal
 function hintText(kind: MediaKind): string {
   const types = describeAllowedTypes(kind);
   const size = formatBytes(MEDIA_LIMITS[kind].maxBytes);
-  return `${types}, up to ${size}.${kind === 'image' ? ' You can also paste an image.' : ''}`;
+  return kind === 'image'
+    ? `${types}, up to ${size}. You can also paste an image.`
+    : `${types}, up to ${size}. You choose a clip of up to ${MEDIA_LIMITS.video.maxClipSeconds} seconds to transform.`;
 }
 
 function InFlight({

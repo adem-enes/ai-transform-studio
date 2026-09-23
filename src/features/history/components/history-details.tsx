@@ -8,12 +8,20 @@ import { CopyLinkButton, ResultActions } from '@/features/transform-core/compone
 import { StatusBadge } from '@/features/transform-core/components/status-badge';
 import { TransformationError } from '@/features/transform-core/components/transformation-error';
 import { formatTimestamp } from '@/features/transform-core/lib/format';
+import { resultRatio } from '@/features/transform-core/lib/result-ratio';
 import { shouldPoll } from '@/lib/api/polling';
 import type { TransformationView } from '@/schemas';
 import { parameterRows, promptOf, thumbnailUrl } from '../lib/describe';
 
 /** Everything recorded about one transformation: status, source and generated URLs, every parameter, timestamps. */
-export function HistoryDetails({ transformation }: { transformation: TransformationView }) {
+export function HistoryDetails({
+  transformation,
+  titleRef,
+}: {
+  transformation: TransformationView;
+  /** The sheet focuses its title on open, so screen readers start from the top. */
+  titleRef?: React.Ref<HTMLHeadingElement>;
+}) {
   const { kind, status, source, output, error } = transformation;
   const prompt = promptOf(transformation);
   const noun = kind === 'image' ? 'image' : 'video';
@@ -21,7 +29,9 @@ export function HistoryDetails({ transformation }: { transformation: Transformat
   return (
     <>
       <SheetHeader className="border-b pr-12">
-        <SheetTitle>Transformation details</SheetTitle>
+        <SheetTitle ref={titleRef} tabIndex={-1} className="focus:outline-none">
+          Transformation details
+        </SheetTitle>
         <SheetDescription>
           {kind === 'image' ? 'Image to Image' : 'Video to Video'} ·{' '}
           {formatTimestamp(transformation.createdAt)}
@@ -32,7 +42,7 @@ export function HistoryDetails({ transformation }: { transformation: Transformat
         <MediaFrame
           src={thumbnailUrl(transformation)}
           alt={output ? (prompt ? `Result for prompt: ${prompt}` : `Result ${noun}`) : `Source ${noun}`}
-          aspectRatio={ratioOf(source.width, source.height, 4 / 3)}
+          aspectRatio={output ? resultRatio(transformation) : ratioOf(source.width, source.height, 4 / 3)}
           sizes="(min-width: 640px) 480px, 100vw"
           className="max-h-72"
         />
