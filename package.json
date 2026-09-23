@@ -18,7 +18,9 @@
     "format": "biome format --write .",
     "prepare": "lefthook install",
     "test": "vitest run",
-    "check:services": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/check-services.ts"
+    "check:services": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/check-services.ts",
+    "webhook:replay": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/webhook-replay.ts",
+    "e2e:image": "tsx --env-file-if-exists=.env.local scripts/e2e-image.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.1",
