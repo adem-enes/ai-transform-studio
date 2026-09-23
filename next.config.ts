@@ -17,9 +17,30 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
 ];
 
+/**
+ * Media is served and resized by Cloudinary through a custom loader
+ * (src/lib/media/cloudinary-loader.ts), so Vercel's image optimizer — and its
+ * quota — is never involved. `remotePatterns` still names the one origin
+ * images may come from, scoped to this app's cloud when its name is known at
+ * build time.
+ */
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+
 const nextConfig: NextConfig = {
   // The version banner is free reconnaissance and buys nothing.
   poweredByHeader: false,
+
+  images: {
+    loader: 'custom',
+    loaderFile: './src/lib/media/cloudinary-loader.ts',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: cloudName ? `/${cloudName}/**` : '/**',
+      },
+    ],
+  },
 
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

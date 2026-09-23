@@ -47,6 +47,8 @@ export type TransformRequest = z.infer<typeof transformRequest>;
 
 const transformationViewBase = z.object({
   id: entityId,
+  /** The upload it was made from — lets the UI start another transformation of the same source. */
+  uploadId: entityId,
   status: transformationStatus,
   source: z.object({
     url: z.url(),

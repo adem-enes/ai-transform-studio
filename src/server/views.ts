@@ -22,6 +22,7 @@ export function toUploadView(doc: UploadDoc): UploadView {
 export function toTransformationView(doc: TransformationDoc): TransformationView {
   const base = {
     id: doc._id.toHexString(),
+    uploadId: doc.uploadId.toHexString(),
     status: doc.status,
     source: {
       url: doc.source.secureUrl,
