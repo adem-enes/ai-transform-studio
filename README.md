@@ -32,10 +32,14 @@ Video-to-video is fully implemented on `/video`, using the same upload, webhook 
 ## Screenshots
 
 <!-- Image files go in docs/screenshots/. -->
-
+### Video to Video
 | Parameter form | Processing status | Result |
 | --- | --- | --- |
 | ![Image-to-image page with an uploaded photo, a prompt, and the model, aspect ratio and resolution fields](docs/screenshots/parameter-form.png) | ![Status panel of a running transformation showing the queued, processing and finalizing steps with an elapsed timer](docs/screenshots/processing-status.png) | ![Finished transformation showing the original and the AI result side by side, with download and copy-link actions](docs/screenshots/result.png) |
+
+### Image to Image
+
+![Image result: before and after comparison slider with the prompt and model used](docs/screenshots/result_image.png)
 
 ## Requirements coverage
 
