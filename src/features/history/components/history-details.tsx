@@ -1,6 +1,7 @@
 'use client';
 
-import { ExternalLinkIcon } from 'lucide-react';
+import { ExternalLinkIcon, PencilIcon } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CostSummary } from '@/features/transform-core/components/cost-summary';
@@ -62,6 +63,13 @@ export function HistoryDetails({
           {error && (status === 'failed' || status === 'timed_out') ? (
             <TransformationError code={error.code} showHistoryLink={false} />
           ) : null}
+          {/* The transform page restores the job's source, settings and result from `?t=`. */}
+          <Button asChild size="sm">
+            <Link href={`/${kind}?t=${transformation.id}`}>
+              <PencilIcon aria-hidden="true" />
+              Open in editor
+            </Link>
+          </Button>
           {output ? (
             <ResultActions url={output.url} downloadName={`ai-transform-${transformation.id}`} />
           ) : null}
