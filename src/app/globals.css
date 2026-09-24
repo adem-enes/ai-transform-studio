@@ -60,33 +60,34 @@
 }
 
 /*
- * Palette: shadcn's neutral base with one accent (indigo) on primary and ring.
- * Adjusted from the defaults for WCAG AA: muted-foreground is darker in light
- * mode so it stays ≥ 4.5:1 on the muted background too, and destructive text
- * clears 4.5:1 on its own 10% tint.
+ * Palette: softened neutrals (no pure black or white, to cut glare) with one blue
+ * accent on primary and ring. Surfaces step up in lightness as they rise: in light
+ * mode cards sit above an off-white page, in dark mode cards are lighter than the page.
+ * Checked for WCAG AA: muted-foreground stays >= 4.5:1 on background and muted, text
+ * on primary clears 4.5:1, and destructive text clears 4.5:1 on its own 10% tint.
  */
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.511 0.262 276.966);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.48 0 0);
-  /* Loading placeholders: muted is nearly white on white, so they get their own, darker tone. */
-  --skeleton: oklch(0.9 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: oklch(0.965 0 0);
+  --foreground: oklch(0.21 0 0);
+  --card: oklch(0.985 0 0);
+  --card-foreground: oklch(0.21 0 0);
+  --popover: oklch(0.985 0 0);
+  --popover-foreground: oklch(0.21 0 0);
+  --primary: oklch(0.4743 0.1324 250.37);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.93 0 0);
+  --secondary-foreground: oklch(0.21 0 0);
+  --muted: oklch(0.93 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  /* Loading placeholders: muted is too close to the page, so they get their own, darker tone. */
+  --skeleton: oklch(0.88 0 0);
+  --accent: oklch(0.93 0 0);
+  --accent-foreground: oklch(0.21 0 0);
   --destructive: oklch(0.505 0.213 27.518);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.585 0.233 277.117);
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.87 0 0);
+  --ring: oklch(0.6 0.13 250.37);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -104,25 +105,25 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.673 0.182 276.935);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --skeleton: oklch(0.269 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.18 0 0);
+  --foreground: oklch(0.93 0 0);
+  --card: oklch(0.215 0 0);
+  --card-foreground: oklch(0.93 0 0);
+  --popover: oklch(0.215 0 0);
+  --popover-foreground: oklch(0.93 0 0);
+  --primary: oklch(0.72 0.12 250.37);
+  --primary-foreground: oklch(0.18 0 0);
+  --secondary: oklch(0.265 0 0);
+  --secondary-foreground: oklch(0.93 0 0);
+  --muted: oklch(0.265 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --skeleton: oklch(0.28 0 0);
+  --accent: oklch(0.265 0 0);
+  --accent-foreground: oklch(0.93 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.673 0.182 276.935);
+  --ring: oklch(0.72 0.12 250.37);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
