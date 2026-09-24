@@ -27,7 +27,7 @@ Upload an image or a short video, describe or pick a style, and get an AI-transf
 
 Video-to-video is fully implemented on `/video`, using the same upload, webhook and history pipeline as images. Image-to-image is the primary flow because video costs far more credits: a 5 s clip at a full 24 fps costs about 240 credits, while an image starts at 5. The case allows this.
 
-> **Verified in production with real credits:** _TODO (author): state which flows were run end to end on the live deployment._
+> **Verified in production with real credits:** Video-to-video (a 5-second clip at half frame rate; the pre-submit estimate of ~150 credits matched the 150 credits charged) and image-to-image.
 
 ## Screenshots
 
