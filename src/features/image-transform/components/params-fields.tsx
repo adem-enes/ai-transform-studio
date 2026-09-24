@@ -33,6 +33,12 @@ import { reconcileResolution, supportedResolutions } from '../lib/resolution';
 
 export type ImageAspectRatio = (typeof IMAGE_ASPECT_RATIOS)[number];
 
+/**
+ * `default` stays valid (older history uses it) but isn't offered: Magic Hour
+ * resolves it to a model the free tier can't use, which fails with a 402.
+ */
+const SELECTABLE_IMAGE_MODELS = IMAGE_MODELS.filter((model) => model !== 'default');
+
 export type ImageFormValues = {
   prompt: string;
   model: ImageModel;
@@ -147,7 +153,7 @@ export function ModelField({
               <SelectValue />
             </SelectTrigger>
             <SelectContent position="popper" className="max-h-80">
-              {IMAGE_MODELS.map((model) => (
+              {SELECTABLE_IMAGE_MODELS.map((model) => (
                 <SelectItem key={model} value={model}>
                   <span>{IMAGE_MODEL_INFO[model].label}</span>
                   <span className="text-muted-foreground">· {describeCost(model)}</span>
@@ -155,9 +161,7 @@ export function ModelField({
               ))}
             </SelectContent>
           </Select>
-          <FieldDescription id="model-hint">
-            Models differ in style, speed and cost. “Recommended” lets Magic Hour choose.
-          </FieldDescription>
+          <FieldDescription id="model-hint">Models differ in style, speed and cost.</FieldDescription>
           {fieldState.invalid ? <FieldError id="model-error" errors={[fieldState.error]} /> : null}
         </Field>
       )}

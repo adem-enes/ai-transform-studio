@@ -108,7 +108,7 @@ export const IMAGE_PROMPT_MAX_LENGTH = 15_000;
 export const imageTransformParams = z
   .object({
     prompt: z.string().trim().min(1, 'Describe the change you want.').max(IMAGE_PROMPT_MAX_LENGTH),
-    model: z.enum(IMAGE_MODELS).default('default'),
+    model: z.enum(IMAGE_MODELS).default('flux-2-klein'),
     aspect_ratio: z.enum(IMAGE_ASPECT_RATIOS).default('auto'),
     resolution: z.enum(IMAGE_RESOLUTIONS).default('1k'),
   })

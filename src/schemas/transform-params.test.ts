@@ -9,7 +9,7 @@ describe('imageTransformParams', () => {
   it('accepts a prompt alone and applies defaults', () => {
     expect(imageTransformParams.parse({ prompt: '  Give me sunglasses ' })).toEqual({
       prompt: 'Give me sunglasses',
-      model: 'default',
+      model: 'flux-2-klein',
       aspect_ratio: 'auto',
       resolution: '1k',
     });

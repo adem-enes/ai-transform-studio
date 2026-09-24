@@ -27,9 +27,9 @@ import {
 
 const DEFAULT_VALUES: ImageFormValues = {
   prompt: '',
-  model: 'default',
+  model: 'flux-2-klein',
   aspect_ratio: 'auto',
-  resolution: '1k',
+  resolution: '640px',
 };
 
 const FORM_FIELDS: ReadonlySet<string> = new Set(Object.keys(DEFAULT_VALUES));
