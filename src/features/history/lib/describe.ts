@@ -1,10 +1,4 @@
 import { describeCost } from '@/features/image-transform/config/models';
-import {
-  FPS_OPTIONS,
-  PROMPT_TYPE_OPTIONS,
-  VIDEO_MODEL_LABELS,
-  VIDEO_VERSION_LABELS,
-} from '@/features/video-transform/config/options';
 import { describeVideoCostFor } from '@/features/video-transform/lib/cost';
 import { videoPosterUrl } from '@/lib/media/cloudinary';
 import {
@@ -12,6 +6,10 @@ import {
   IMAGE_MODEL_CATALOG,
   IMAGE_RESOLUTION_CATALOG,
   type TransformationView,
+  VIDEO_FPS_RESOLUTION_CATALOG,
+  VIDEO_MODEL_CATALOG,
+  VIDEO_PROMPT_TYPE_CATALOG,
+  VIDEO_VERSION_CATALOG,
 } from '@/schemas';
 
 /**
@@ -81,13 +79,13 @@ export function parameterRows(transformation: TransformationView): { label: stri
   const p = transformation.params;
   return [
     { label: 'Art style', value: p.art_style },
-    { label: 'Model', value: VIDEO_MODEL_LABELS[p.model] },
-    { label: 'Version', value: VIDEO_VERSION_LABELS[p.version] },
-    { label: 'Prompt type', value: PROMPT_TYPE_OPTIONS[p.prompt_type].label },
+    { label: 'Model', value: VIDEO_MODEL_CATALOG[p.model].label },
+    { label: 'Version', value: VIDEO_VERSION_CATALOG[p.version].label },
+    { label: 'Prompt type', value: VIDEO_PROMPT_TYPE_CATALOG[p.prompt_type].label },
     { label: 'Prompt', value: p.prompt ?? 'None — the art style’s own prompt' },
     {
       label: 'Frame rate',
-      value: `${FPS_OPTIONS[p.fps_resolution].label} — ${p.fps_resolution === 'FULL' ? 'the source frame rate' : 'half the source frame rate'}`,
+      value: `${VIDEO_FPS_RESOLUTION_CATALOG[p.fps_resolution].label} — ${p.fps_resolution === 'FULL' ? 'the source frame rate' : 'half the source frame rate'}`,
     },
     {
       label: 'Clip',

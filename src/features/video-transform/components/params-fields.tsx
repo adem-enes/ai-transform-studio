@@ -19,19 +19,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import {
+  VIDEO_FPS_RESOLUTION_CATALOG,
   VIDEO_FPS_RESOLUTIONS,
+  VIDEO_MODEL_CATALOG,
   VIDEO_MODELS,
   VIDEO_PROMPT_MAX_LENGTH,
+  VIDEO_PROMPT_TYPE_CATALOG,
   VIDEO_PROMPT_TYPES,
+  VIDEO_VERSION_CATALOG,
   VIDEO_VERSIONS,
   type VideoTransformParams,
 } from '@/schemas';
-import {
-  FPS_OPTIONS,
-  PROMPT_TYPE_OPTIONS,
-  VIDEO_MODEL_LABELS,
-  VIDEO_VERSION_LABELS,
-} from '../config/options';
 import type { VideoFormContext, VideoFormValues } from '../lib/video-form';
 
 type FieldProps = {
@@ -141,13 +139,13 @@ function SelectField<N extends 'model' | 'version'>({
   label,
   hint,
   options,
-  labels,
+  catalog,
 }: FieldProps & {
   name: N;
   label: string;
   hint: string;
   options: readonly VideoFormValues[N][];
-  labels: Record<VideoFormValues[N], string>;
+  catalog: Record<VideoFormValues[N], { label: string }>;
 }) {
   return (
     <Controller
@@ -170,7 +168,7 @@ function SelectField<N extends 'model' | 'version'>({
             <SelectContent position="popper" className="max-h-80">
               {options.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {labels[option]}
+                  {catalog[option].label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -191,7 +189,7 @@ export function ModelField(props: FieldProps) {
       label="Model"
       hint="“Default” picks the model recommended for the art style. Dreamshaper suits animation and realism; Absolute Reality leans realistic; Flat 2D Anime gives flat illustration."
       options={VIDEO_MODELS}
-      labels={VIDEO_MODEL_LABELS}
+      catalog={VIDEO_MODEL_CATALOG}
     />
   );
 }
@@ -204,7 +202,7 @@ export function VersionField(props: FieldProps) {
       label="Version"
       hint="“Default” uses the version recommended for the art style. v1 follows the prompt more closely; v2 is faster and less noisy."
       options={VIDEO_VERSIONS}
-      labels={VIDEO_VERSION_LABELS}
+      catalog={VIDEO_VERSION_CATALOG}
     />
   );
 }
@@ -242,10 +240,10 @@ export function PromptFields({ control, disabled }: FieldProps) {
                   />
                   <span className="space-y-0.5">
                     <span id={`prompt-type-${type}-label`} className="block font-medium">
-                      {PROMPT_TYPE_OPTIONS[type].label}
+                      {VIDEO_PROMPT_TYPE_CATALOG[type].label}
                     </span>
                     <span id={`prompt-type-${type}-hint`} className="block text-muted-foreground">
-                      {PROMPT_TYPE_OPTIONS[type].description}
+                      {VIDEO_PROMPT_TYPE_CATALOG[type].description}
                     </span>
                   </span>
                 </label>
@@ -325,10 +323,10 @@ export function FpsField({ control, disabled }: FieldProps) {
                 />
                 <span className="space-y-0.5">
                   <span id={`fps-${fps}-label`} className="block font-medium">
-                    {FPS_OPTIONS[fps].label}
+                    {VIDEO_FPS_RESOLUTION_CATALOG[fps].label}
                   </span>
                   <span id={`fps-${fps}-hint`} className="block text-muted-foreground">
-                    {FPS_OPTIONS[fps].description}
+                    {VIDEO_FPS_RESOLUTION_CATALOG[fps].description}
                   </span>
                 </span>
               </label>

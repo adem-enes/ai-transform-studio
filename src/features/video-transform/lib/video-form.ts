@@ -1,20 +1,14 @@
 import type { FieldErrors, Resolver } from 'react-hook-form';
 import {
-  type VIDEO_ART_STYLES,
-  type VIDEO_FPS_RESOLUTIONS,
-  type VIDEO_MODELS,
-  type VIDEO_PROMPT_TYPES,
-  type VIDEO_VERSIONS,
+  type VideoArtStyle,
+  type VideoFpsResolution,
+  type VideoModel,
+  type VideoPromptType,
   type VideoTransformParams,
+  type VideoVersion,
   videoTransformParams,
 } from '@/schemas';
 import { formatSeconds } from './clip';
-
-export type VideoArtStyle = (typeof VIDEO_ART_STYLES)[number];
-export type VideoModel = (typeof VIDEO_MODELS)[number];
-export type VideoVersion = (typeof VIDEO_VERSIONS)[number];
-export type VideoPromptType = (typeof VIDEO_PROMPT_TYPES)[number];
-export type VideoFpsResolution = (typeof VIDEO_FPS_RESOLUTIONS)[number];
 
 /**
  * What the form holds. Close to `VideoTransformParams`, except that nothing is

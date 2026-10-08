@@ -12,7 +12,7 @@ import { VideoPlayer } from '@/features/transform-core/components/video-player';
 import { useTransformFlow } from '@/features/transform-core/hooks/use-transform-flow';
 import type { SourceMedia } from '@/features/transform-core/lib/source';
 import { videoClipUrl, videoPosterUrl } from '@/lib/media/cloudinary';
-import type { VideoTransformParams } from '@/schemas';
+import { VIDEO_DEFAULTS, type VideoTransformParams } from '@/schemas';
 import {
   type Clip,
   type ClipBounds,
@@ -42,11 +42,8 @@ import { VideoResult } from './video-result';
 const DEFAULT_VALUES: VideoFormValues = {
   start_seconds: 0,
   end_seconds: DEFAULT_MAX_CLIP,
-  fps_resolution: 'HALF',
+  ...VIDEO_DEFAULTS,
   art_style: '',
-  model: 'default',
-  version: 'default',
-  prompt_type: 'default',
   prompt: '',
 };
 

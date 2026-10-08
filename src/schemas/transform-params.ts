@@ -38,6 +38,7 @@ function offered<T extends string>(catalog: Record<T, boolean | { offered: boole
 }
 
 type OptionSpec = { offered: boolean; label: string };
+type DescribedOptionSpec = OptionSpec & { description: string };
 
 // ---------------------------------------------------------------------------
 // Image — AI Image Editor (POST /v1/ai-image-editor)
@@ -263,34 +264,83 @@ export const VIDEO_ART_STYLES = offered({
   'Wuxia Anime': true,
   Zelda: true,
 } satisfies Record<V1VideoToVideoCreateBodyStyleArtStyleEnum, boolean>);
+export type VideoArtStyle = (typeof VIDEO_ART_STYLES)[number];
 
-export const VIDEO_MODELS = offered({
-  default: true,
-  Dreamshaper: true,
-  'Absolute Reality': true,
-  'Flat 2D Anime': true,
-  'Soft Anime': true,
-  Kaywaii: true,
-  'Western Anime': true,
-  '3D Anime': true,
-} satisfies Record<V1VideoToVideoCreateBodyStyleModelEnum, boolean>);
+/*
+ * Labels and one-line explanations for the options below come from the API
+ * reference's field descriptions (POST /v1/video-to-video, `style.*` and
+ * `fps_resolution`).
+ */
 
-export const VIDEO_PROMPT_TYPES = offered({
-  default: true,
-  custom: true,
-  append_default: true,
-} satisfies Record<V1VideoToVideoCreateBodyStylePromptTypeEnum, boolean>);
+export const VIDEO_MODEL_CATALOG = {
+  default: { offered: true, label: 'Default (recommended)' },
+  Dreamshaper: { offered: true, label: 'Dreamshaper' },
+  'Absolute Reality': { offered: true, label: 'Absolute Reality' },
+  'Flat 2D Anime': { offered: true, label: 'Flat 2D Anime' },
+  'Soft Anime': { offered: true, label: 'Soft Anime' },
+  Kaywaii: { offered: true, label: 'Kaywaii' },
+  'Western Anime': { offered: true, label: 'Western Anime' },
+  '3D Anime': { offered: true, label: '3D Anime' },
+} as const satisfies Record<V1VideoToVideoCreateBodyStyleModelEnum, OptionSpec>;
+export const VIDEO_MODELS = offered(VIDEO_MODEL_CATALOG);
+export type VideoModel = (typeof VIDEO_MODELS)[number];
 
-export const VIDEO_VERSIONS = offered({
-  default: true,
-  v1: true,
-  v2: true,
-} satisfies Record<V1VideoToVideoCreateBodyStyleVersionEnum, boolean>);
+export const VIDEO_PROMPT_TYPE_CATALOG = {
+  default: {
+    offered: true,
+    label: 'Default',
+    description: 'Use the art style’s own recommended prompt. No prompt needed.',
+  },
+  custom: {
+    offered: true,
+    label: 'Custom',
+    description: 'Use only your prompt (v1 still adds the style’s own tags).',
+  },
+  append_default: {
+    offered: true,
+    label: 'Append to default',
+    description: 'Your prompt, followed by the art style’s recommended prompt.',
+  },
+} as const satisfies Record<V1VideoToVideoCreateBodyStylePromptTypeEnum, DescribedOptionSpec>;
+export const VIDEO_PROMPT_TYPES = offered(VIDEO_PROMPT_TYPE_CATALOG);
+export type VideoPromptType = (typeof VIDEO_PROMPT_TYPES)[number];
 
-export const VIDEO_FPS_RESOLUTIONS = offered({
-  HALF: true,
-  FULL: true,
-} satisfies Record<V1VideoToVideoCreateBodyFpsResolutionEnum, boolean>);
+export const VIDEO_VERSION_CATALOG = {
+  default: { offered: true, label: 'Default (recommended)' },
+  v1: { offered: true, label: 'v1 · more detail' },
+  v2: { offered: true, label: 'v2 · faster, steadier' },
+} as const satisfies Record<V1VideoToVideoCreateBodyStyleVersionEnum, OptionSpec>;
+export const VIDEO_VERSIONS = offered(VIDEO_VERSION_CATALOG);
+export type VideoVersion = (typeof VIDEO_VERSIONS)[number];
+
+export const VIDEO_FPS_RESOLUTION_CATALOG = {
+  HALF: {
+    offered: true,
+    label: 'Half',
+    description: 'Half the source’s frame rate. Renders half the frames, so it costs about half as much.',
+  },
+  FULL: {
+    offered: true,
+    label: 'Full',
+    description: 'The source’s full frame rate. Smoother, but renders twice the frames and costs more.',
+  },
+} as const satisfies Record<V1VideoToVideoCreateBodyFpsResolutionEnum, DescribedOptionSpec>;
+export const VIDEO_FPS_RESOLUTIONS = offered(VIDEO_FPS_RESOLUTION_CATALOG);
+export type VideoFpsResolution = (typeof VIDEO_FPS_RESOLUTIONS)[number];
+
+/** Defaults shared by the schema, the form and the tests. */
+export const VIDEO_DEFAULTS = {
+  /** `HALF` renders (and bills) half the source frames — the cheaper default, as in the API. */
+  fps_resolution: 'HALF',
+  model: 'default',
+  version: 'default',
+  prompt_type: 'default',
+} as const satisfies {
+  fps_resolution: VideoFpsResolution;
+  model: VideoModel;
+  version: VideoVersion;
+  prompt_type: VideoPromptType;
+};
 
 /** Our own cap — the Video-to-Video reference documents no prompt length limit. */
 export const VIDEO_PROMPT_MAX_LENGTH = 2_000;
@@ -299,12 +349,11 @@ export const videoTransformParams = z
   .object({
     start_seconds: z.number().min(0),
     end_seconds: z.number().min(0.1),
-    /** `HALF` renders (and bills) half the source frames — the cheaper default, as in the API. */
-    fps_resolution: z.enum(VIDEO_FPS_RESOLUTIONS).default('HALF'),
+    fps_resolution: z.enum(VIDEO_FPS_RESOLUTIONS).default(VIDEO_DEFAULTS.fps_resolution),
     art_style: z.enum(VIDEO_ART_STYLES),
-    model: z.enum(VIDEO_MODELS).default('default'),
-    version: z.enum(VIDEO_VERSIONS).default('default'),
-    prompt_type: z.enum(VIDEO_PROMPT_TYPES).default('default'),
+    model: z.enum(VIDEO_MODELS).default(VIDEO_DEFAULTS.model),
+    version: z.enum(VIDEO_VERSIONS).default(VIDEO_DEFAULTS.version),
+    prompt_type: z.enum(VIDEO_PROMPT_TYPES).default(VIDEO_DEFAULTS.prompt_type),
     /** Ignored by Magic Hour when `prompt_type` is `default`; required otherwise. */
     prompt: z.string().trim().min(1).max(VIDEO_PROMPT_MAX_LENGTH).nullable().default(null),
   })

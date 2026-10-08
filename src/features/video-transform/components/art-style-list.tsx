@@ -8,8 +8,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import type { VideoArtStyle } from '@/schemas';
 import { VIDEO_ART_STYLES } from '@/schemas';
-import type { VideoArtStyle } from '../lib/video-form';
 
 /**
  * The searchable art-style list inside the style popover. Its own module so
