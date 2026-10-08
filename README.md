@@ -327,7 +327,7 @@ npm test
 
 Vitest covers:
 
-- **Workflow** (`src/server/application`): create, upload, webhook handling, finalize and reconciliation. It runs against in-memory fakes that enforce the same transition table as the database, and covers duplicate, out-of-order and late webhooks, the deferred copy and its failure, recovery through reconciliation, timeouts, `timed_out` recovery, the active-job limit and the lost-project-id window.
+- **Workflow** (`tests/server/application`): create, upload, webhook handling, finalize and reconciliation. It runs against in-memory fakes that enforce the same transition table as the database, and covers duplicate, out-of-order and late webhooks, the deferred copy and its failure, recovery through reconciliation, timeouts, `timed_out` recovery, the active-job limit and the lost-project-id window.
 - **HTTP layer**: webhook route status codes (signature, size, malformed and unknown events, 503 redelivery, acknowledgement before the copy), the error envelope, Origin check, cookie identity.
 - **Security primitives**: webhook signature (tampering, re-serialised body, wrong secret, swapped timestamp, stale and future timestamps), Uploadcare upload signatures, log redaction.
 - **Services and schemas**: Magic Hour error mapping, Uploadcare file checks, Cloudinary parsing, request and param schemas, history cursors.
@@ -352,13 +352,14 @@ src/
 ├── lib/                      Client-safe code: typed API client and hooks, env, Cloudinary URL helpers
 ├── components/               Layout and shadcn/ui primitives
 ├── server/                   Server-only code
-│   ├── application/          The workflow: create, upload, webhook, finalize, reconcile; timing config; test fakes
+│   ├── application/          The workflow: create, upload, webhook, finalize, reconcile; timing config
 │   ├── repositories/         MongoDB access, conditional transitions
 │   ├── services/             Magic Hour, Cloudinary and Uploadcare adapters
 │   ├── webhooks/             Event schema and signature verification
 │   ├── http/                 Response envelope, webhook handler, Origin check
 │   ├── db/                   Client, collections, indexes, document schemas
 │   └── identity.ts logger.ts errors.ts views.ts
+tests/                        Vitest suites mirroring src/, plus helpers/ (in-memory workflow fakes)
 scripts/                      check-services, webhook-replay, e2e-image, cleanup-uploadcare
 ```
 
