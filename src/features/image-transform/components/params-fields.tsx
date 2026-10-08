@@ -16,22 +16,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import {
+  IMAGE_ASPECT_RATIO_CATALOG,
   IMAGE_ASPECT_RATIOS,
+  IMAGE_MODEL_CATALOG,
   IMAGE_MODELS,
   IMAGE_PROMPT_MAX_LENGTH,
+  IMAGE_RESOLUTION_CATALOG,
+  type ImageAspectRatio,
   type ImageModel,
   type ImageResolution,
+  supportedResolutions,
 } from '@/schemas';
-import {
-  ASPECT_RATIO_LABELS,
-  describeCost,
-  EXAMPLE_PROMPTS,
-  IMAGE_MODEL_INFO,
-  RESOLUTION_LABELS,
-} from '../config/models';
-import { reconcileResolution, supportedResolutions } from '../lib/resolution';
-
-export type ImageAspectRatio = (typeof IMAGE_ASPECT_RATIOS)[number];
+import { describeCost, EXAMPLE_PROMPTS } from '../config/models';
+import { reconcileResolution } from '../lib/resolution';
 
 /**
  * `default` stays valid (older history uses it) but isn't offered: Magic Hour
@@ -155,7 +152,7 @@ export function ModelField({
             <SelectContent position="popper" className="max-h-80">
               {SELECTABLE_IMAGE_MODELS.map((model) => (
                 <SelectItem key={model} value={model}>
-                  <span>{IMAGE_MODEL_INFO[model].label}</span>
+                  <span>{IMAGE_MODEL_CATALOG[model].label}</span>
                   <span className="text-muted-foreground">· {describeCost(model)}</span>
                 </SelectItem>
               ))}
@@ -224,7 +221,7 @@ export function AspectRatioField({ control, disabled }: FieldProps) {
                 </span>
                 <span className="font-medium">{ratio === 'auto' ? 'Auto' : ratio}</span>
                 {ratio === 'auto' ? null : (
-                  <span className="text-muted-foreground">{ASPECT_RATIO_LABELS[ratio]}</span>
+                  <span className="text-muted-foreground">{IMAGE_ASPECT_RATIO_CATALOG[ratio].label}</span>
                 )}
               </label>
             ))}
@@ -273,7 +270,7 @@ export function ResolutionField({ control, disabled, resetNote }: FieldProps & {
                 )}
               >
                 <RadioGroupItem id={`resolution-${resolution}`} value={resolution} className="sr-only" />
-                {RESOLUTION_LABELS[resolution]}
+                {IMAGE_RESOLUTION_CATALOG[resolution].label}
               </label>
             ))}
           </RadioGroup>
@@ -299,7 +296,7 @@ export function resolutionResetNote(
   return {
     next: resolution,
     note: changed
-      ? `${IMAGE_MODEL_INFO[model].label} doesn’t support ${RESOLUTION_LABELS[current]}, so resolution was set to ${RESOLUTION_LABELS[resolution]}.`
+      ? `${IMAGE_MODEL_CATALOG[model].label} doesn’t support ${IMAGE_RESOLUTION_CATALOG[current].label}, so resolution was set to ${IMAGE_RESOLUTION_CATALOG[resolution].label}.`
       : null,
   };
 }

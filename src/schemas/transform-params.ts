@@ -18,88 +18,152 @@ import { MEDIA_LIMITS } from './media';
  * reads like the request that was sent. The service layer maps them onto the
  * SDK's camelCase request types.
  *
- * Every enum below is declared as a `Record<SdkEnum, boolean>` literal — `true`
- * means "offered to users", `false` means "exists in the API but deliberately
- * not offered" (deprecated values). `satisfies` rejects both a missing and an
- * unknown key, so an SDK upgrade that adds or removes a value fails the
- * typecheck here instead of drifting silently.
+ * Every enum below has one catalog: a `Record<SdkEnum, …>` literal that holds
+ * everything known about each value — whether it is offered (`false` means
+ * "exists in the API but deliberately not offered", e.g. deprecated values),
+ * its display label and any per-value data. The value lists, labels and
+ * lookups used elsewhere are derived from it. `satisfies` rejects both a
+ * missing and an unknown key, so an SDK upgrade that adds or removes a value
+ * fails the typecheck here instead of drifting silently.
  */
-function offered<T extends string>(flags: Record<T, boolean>): [T, ...T[]] {
-  const [first, ...rest] = (Object.keys(flags) as T[]).filter((value) => flags[value]);
+function offered<T extends string>(catalog: Record<T, boolean | { offered: boolean }>): [T, ...T[]] {
+  const [first, ...rest] = (Object.keys(catalog) as T[]).filter((value) => {
+    const entry = catalog[value];
+    return typeof entry === 'boolean' ? entry : entry.offered;
+  });
   if (first === undefined) {
     throw new Error('An enum must offer at least one value.');
   }
   return [first, ...rest];
 }
 
+type OptionSpec = { offered: boolean; label: string };
+
 // ---------------------------------------------------------------------------
 // Image — AI Image Editor (POST /v1/ai-image-editor)
 // ---------------------------------------------------------------------------
 
-export const IMAGE_MODELS = offered({
-  default: true,
-  'flux-2-klein': true,
-  'gpt-image-2': true,
-  'gpt-image-2.5-flare': true,
-  'krea-2': true,
-  'nano-banana': true,
-  'nano-banana-2': true,
-  'nano-banana-2-lite': true,
-  'nano-banana-pro': true,
-  'qwen-edit': true,
-  'seedream-v4': true,
-  'seedream-v4.5': true,
-  'seedream-v5-pro': true,
-} satisfies Record<V1AiImageEditorCreateBodyModelEnum, boolean>);
-export type ImageModel = (typeof IMAGE_MODELS)[number];
-
-export const IMAGE_ASPECT_RATIOS = offered({
-  auto: true,
-  '1:1': true,
-  '16:9': true,
-  '9:16': true,
-  '4:3': true,
-  '3:2': true,
-  '4:5': true,
-  '2:3': true,
-} satisfies Record<V1AiImageEditorCreateBodyAspectRatioEnum, boolean>);
-
-export const IMAGE_RESOLUTIONS = offered({
-  '640px': true,
-  '1k': true,
-  '2k': true,
-  '4k': true,
+export const IMAGE_RESOLUTION_CATALOG = {
+  '640px': { offered: true, label: '640 px' },
+  '1k': { offered: true, label: '1K' },
+  '2k': { offered: true, label: '2K' },
+  '4k': { offered: true, label: '4K' },
   /** Deprecated by Magic Hour ("mapped server-side from your subscription tier"). */
-  auto: false,
-} satisfies Record<V1AiImageEditorCreateBodyResolutionEnum, boolean>);
+  auto: { offered: false, label: 'Auto' },
+} as const satisfies Record<V1AiImageEditorCreateBodyResolutionEnum, OptionSpec>;
+export const IMAGE_RESOLUTIONS = offered(IMAGE_RESOLUTION_CATALOG);
 export type ImageResolution = (typeof IMAGE_RESOLUTIONS)[number];
 
+type ImageModelSpec = OptionSpec & {
+  /**
+   * "From" cost per image in Magic Hour credits, at the cheapest resolution.
+   * `null` for `default`, which is whichever model Magic Hour currently recommends.
+   */
+  baseCredits: number | null;
+  /**
+   * Output resolutions the model supports, in catalog order. `null` for
+   * `default`: the provider validates it, since the model behind it changes.
+   */
+  resolutions: readonly ImageResolution[] | null;
+};
+
 /**
- * Output resolutions each model supports, from the AI Image Editor reference
- * (`resolution` → "Per-model support"). `default` is omitted: it is whichever
- * model Magic Hour currently recommends, so the provider validates it.
+ * AI Image Editor models. Costs come from the Magic Hour API reference
+ * (`model` → "from N credits/image") and resolutions from `resolution` →
+ * "Per-model support", as shipped in the SDK's docs — update them together
+ * with the SDK.
  */
-export const IMAGE_MODEL_RESOLUTIONS = {
-  'flux-2-klein': ['640px', '1k', '2k'],
-  'gpt-image-2': ['640px', '1k', '2k', '4k'],
-  'gpt-image-2.5-flare': ['640px', '1k', '2k', '4k'],
-  'krea-2': ['640px', '1k'],
-  'nano-banana': ['640px', '1k'],
-  'nano-banana-2': ['640px', '1k', '2k', '4k'],
-  'nano-banana-2-lite': ['640px', '1k'],
-  'nano-banana-pro': ['1k', '2k', '4k'],
-  'qwen-edit': ['640px', '1k', '2k'],
-  'seedream-v4': ['640px', '1k', '2k', '4k'],
-  'seedream-v4.5': ['640px', '1k', '2k', '4k'],
-  'seedream-v5-pro': ['640px', '1k', '2k'],
-} as const satisfies Record<Exclude<ImageModel, 'default'>, readonly ImageResolution[]>;
+export const IMAGE_MODEL_CATALOG = {
+  default: { offered: true, label: 'Recommended (auto)', baseCredits: null, resolutions: null },
+  'flux-2-klein': {
+    offered: true,
+    label: 'FLUX.2 Klein',
+    baseCredits: 5,
+    resolutions: ['640px', '1k', '2k'],
+  },
+  'gpt-image-2': {
+    offered: true,
+    label: 'GPT Image 2',
+    baseCredits: 50,
+    resolutions: ['640px', '1k', '2k', '4k'],
+  },
+  'gpt-image-2.5-flare': {
+    offered: true,
+    label: 'GPT Image 2.5 Flare',
+    baseCredits: 100,
+    resolutions: ['640px', '1k', '2k', '4k'],
+  },
+  'krea-2': { offered: true, label: 'Krea 2', baseCredits: 10, resolutions: ['640px', '1k'] },
+  'nano-banana': { offered: true, label: 'Nano Banana', baseCredits: 50, resolutions: ['640px', '1k'] },
+  'nano-banana-2': {
+    offered: true,
+    label: 'Nano Banana 2',
+    baseCredits: 100,
+    resolutions: ['640px', '1k', '2k', '4k'],
+  },
+  'nano-banana-2-lite': {
+    offered: true,
+    label: 'Nano Banana 2 Lite',
+    baseCredits: 50,
+    resolutions: ['640px', '1k'],
+  },
+  'nano-banana-pro': {
+    offered: true,
+    label: 'Nano Banana Pro',
+    baseCredits: 150,
+    resolutions: ['1k', '2k', '4k'],
+  },
+  'qwen-edit': { offered: true, label: 'Qwen Edit', baseCredits: 10, resolutions: ['640px', '1k', '2k'] },
+  'seedream-v4': {
+    offered: true,
+    label: 'Seedream 4',
+    baseCredits: 40,
+    resolutions: ['640px', '1k', '2k', '4k'],
+  },
+  'seedream-v4.5': {
+    offered: true,
+    label: 'Seedream 4.5',
+    baseCredits: 50,
+    resolutions: ['640px', '1k', '2k', '4k'],
+  },
+  'seedream-v5-pro': {
+    offered: true,
+    label: 'Seedream 5 Pro',
+    baseCredits: 75,
+    resolutions: ['640px', '1k', '2k'],
+  },
+} as const satisfies Record<V1AiImageEditorCreateBodyModelEnum, ImageModelSpec>;
+export const IMAGE_MODELS = offered(IMAGE_MODEL_CATALOG);
+export type ImageModel = (typeof IMAGE_MODELS)[number];
+
+export const IMAGE_ASPECT_RATIO_CATALOG = {
+  auto: { offered: true, label: 'Auto' },
+  '1:1': { offered: true, label: 'Square' },
+  '16:9': { offered: true, label: 'Wide' },
+  '9:16': { offered: true, label: 'Tall' },
+  '4:3': { offered: true, label: 'Landscape' },
+  '3:2': { offered: true, label: 'Photo' },
+  '4:5': { offered: true, label: 'Portrait' },
+  '2:3': { offered: true, label: 'Poster' },
+} as const satisfies Record<V1AiImageEditorCreateBodyAspectRatioEnum, OptionSpec>;
+export const IMAGE_ASPECT_RATIOS = offered(IMAGE_ASPECT_RATIO_CATALOG);
+export type ImageAspectRatio = (typeof IMAGE_ASPECT_RATIOS)[number];
+
+/** Defaults shared by the schema, the form and the tests. */
+export const IMAGE_DEFAULTS = {
+  model: 'flux-2-klein',
+  aspect_ratio: 'auto',
+  /** The cheapest size; also where a model change lands when the current size is unsupported. */
+  resolution: '640px',
+} as const satisfies { model: ImageModel; aspect_ratio: ImageAspectRatio; resolution: ImageResolution };
+
+/** Resolutions the model supports, in catalog order. `default` supports all (the provider validates). */
+export function supportedResolutions(model: ImageModel): readonly ImageResolution[] {
+  return IMAGE_MODEL_CATALOG[model].resolutions ?? IMAGE_RESOLUTIONS;
+}
 
 export function isResolutionSupported(model: ImageModel, resolution: ImageResolution): boolean {
-  if (model === 'default') {
-    return true;
-  }
-  const supported: readonly ImageResolution[] = IMAGE_MODEL_RESOLUTIONS[model];
-  return supported.includes(resolution);
+  return supportedResolutions(model).includes(resolution);
 }
 
 /** API limit on `style.prompt` for the AI Image Editor. */
@@ -108,9 +172,9 @@ export const IMAGE_PROMPT_MAX_LENGTH = 15_000;
 export const imageTransformParams = z
   .object({
     prompt: z.string().trim().min(1, 'Describe the change you want.').max(IMAGE_PROMPT_MAX_LENGTH),
-    model: z.enum(IMAGE_MODELS).default('flux-2-klein'),
-    aspect_ratio: z.enum(IMAGE_ASPECT_RATIOS).default('auto'),
-    resolution: z.enum(IMAGE_RESOLUTIONS).default('1k'),
+    model: z.enum(IMAGE_MODELS).default(IMAGE_DEFAULTS.model),
+    aspect_ratio: z.enum(IMAGE_ASPECT_RATIOS).default(IMAGE_DEFAULTS.aspect_ratio),
+    resolution: z.enum(IMAGE_RESOLUTIONS).default(IMAGE_DEFAULTS.resolution),
   })
   .refine((params) => isResolutionSupported(params.model, params.resolution), {
     message: 'This model does not support the selected resolution.',

@@ -11,7 +11,7 @@ describe('imageTransformParams', () => {
       prompt: 'Give me sunglasses',
       model: 'flux-2-klein',
       aspect_ratio: 'auto',
-      resolution: '1k',
+      resolution: '640px',
     });
   });
 

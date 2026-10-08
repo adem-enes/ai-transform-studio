@@ -1,9 +1,4 @@
-import {
-  ASPECT_RATIO_LABELS,
-  describeCost,
-  IMAGE_MODEL_INFO,
-  RESOLUTION_LABELS,
-} from '@/features/image-transform/config/models';
+import { describeCost } from '@/features/image-transform/config/models';
 import {
   FPS_OPTIONS,
   PROMPT_TYPE_OPTIONS,
@@ -12,7 +7,12 @@ import {
 } from '@/features/video-transform/config/options';
 import { describeVideoCostFor } from '@/features/video-transform/lib/cost';
 import { videoPosterUrl } from '@/lib/media/cloudinary';
-import type { TransformationView } from '@/schemas';
+import {
+  IMAGE_ASPECT_RATIO_CATALOG,
+  IMAGE_MODEL_CATALOG,
+  IMAGE_RESOLUTION_CATALOG,
+  type TransformationView,
+} from '@/schemas';
 
 /**
  * The card thumbnail: the result once there is one, otherwise the source.
@@ -40,7 +40,7 @@ export function videoDurationOf(transformation: TransformationView): number | nu
 export function keyParams(transformation: TransformationView): string[] {
   if (transformation.kind === 'image') {
     const { model, aspect_ratio } = transformation.params;
-    return [IMAGE_MODEL_INFO[model].label, aspect_ratio === 'auto' ? 'Auto ratio' : aspect_ratio];
+    return [IMAGE_MODEL_CATALOG[model].label, aspect_ratio === 'auto' ? 'Auto ratio' : aspect_ratio];
   }
   const { art_style, start_seconds, end_seconds } = transformation.params;
   return [art_style, `${formatSeconds(start_seconds)}–${formatSeconds(end_seconds)} s`];
@@ -67,15 +67,15 @@ export function parameterRows(transformation: TransformationView): { label: stri
     const { prompt, model, aspect_ratio, resolution } = transformation.params;
     return [
       { label: 'Prompt', value: prompt },
-      { label: 'Model', value: `${IMAGE_MODEL_INFO[model].label} (${model})` },
+      { label: 'Model', value: `${IMAGE_MODEL_CATALOG[model].label} (${model})` },
       {
         label: 'Aspect ratio',
         value:
           aspect_ratio === 'auto'
             ? 'Auto (match source)'
-            : `${aspect_ratio} (${ASPECT_RATIO_LABELS[aspect_ratio]})`,
+            : `${aspect_ratio} (${IMAGE_ASPECT_RATIO_CATALOG[aspect_ratio].label})`,
       },
-      { label: 'Resolution', value: RESOLUTION_LABELS[resolution] },
+      { label: 'Resolution', value: IMAGE_RESOLUTION_CATALOG[resolution].label },
     ];
   }
   const p = transformation.params;

@@ -1,23 +1,11 @@
-import {
-  IMAGE_MODEL_RESOLUTIONS,
-  IMAGE_RESOLUTIONS,
-  type ImageModel,
-  type ImageResolution,
-  imageTransformParams,
-} from '@/schemas';
-
-/** The schema's default resolution — what a model falls back to when it supports it. */
-const DEFAULT_RESOLUTION: ImageResolution = imageTransformParams.parse({ prompt: 'x' }).resolution;
-
-/** Resolutions the model supports, in the schema's order. `default` supports all (the provider validates). */
-export function supportedResolutions(model: ImageModel): readonly ImageResolution[] {
-  return model === 'default' ? IMAGE_RESOLUTIONS : IMAGE_MODEL_RESOLUTIONS[model];
-}
+import { IMAGE_DEFAULTS, type ImageModel, type ImageResolution, supportedResolutions } from '@/schemas';
 
 /** The resolution a model starts at: the shared default if it supports it, else its first supported one. */
 export function defaultResolutionFor(model: ImageModel): ImageResolution {
   const supported = supportedResolutions(model);
-  return supported.includes(DEFAULT_RESOLUTION) ? DEFAULT_RESOLUTION : (supported[0] ?? DEFAULT_RESOLUTION);
+  return supported.includes(IMAGE_DEFAULTS.resolution)
+    ? IMAGE_DEFAULTS.resolution
+    : (supported[0] ?? IMAGE_DEFAULTS.resolution);
 }
 
 /**

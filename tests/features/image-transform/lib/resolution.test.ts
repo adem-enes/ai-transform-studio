@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  defaultResolutionFor,
-  reconcileResolution,
-  supportedResolutions,
-} from '@/features/image-transform/lib/resolution';
-import { IMAGE_MODELS, isResolutionSupported } from '@/schemas';
+import { defaultResolutionFor, reconcileResolution } from '@/features/image-transform/lib/resolution';
+import { IMAGE_MODELS, isResolutionSupported, supportedResolutions } from '@/schemas';
 
 describe('reconcileResolution', () => {
   it('keeps a resolution the new model supports', () => {
@@ -12,11 +8,11 @@ describe('reconcileResolution', () => {
   });
 
   it('resets an unsupported resolution to the model default and reports it', () => {
-    expect(reconcileResolution('krea-2', '4k')).toEqual({ resolution: '1k', changed: true });
+    expect(reconcileResolution('krea-2', '4k')).toEqual({ resolution: '640px', changed: true });
   });
 
   it('falls back to the first supported resolution when the model lacks the shared default', () => {
-    // nano-banana-pro starts at 1k, so 640px is unsupported and 1k (the shared default) is chosen.
+    // nano-banana-pro starts at 1k, so the shared default (640px) is unsupported and 1k is chosen.
     expect(reconcileResolution('nano-banana-pro', '640px')).toEqual({ resolution: '1k', changed: true });
   });
 

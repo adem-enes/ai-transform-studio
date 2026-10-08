@@ -14,7 +14,7 @@ import { useTransformFlow } from '@/features/transform-core/hooks/use-transform-
 import { truncate } from '@/features/transform-core/lib/format';
 import { resultRatio } from '@/features/transform-core/lib/result-ratio';
 import type { SourceMedia } from '@/features/transform-core/lib/source';
-import { type ImageTransformParams, imageTransformParams } from '@/schemas';
+import { IMAGE_DEFAULTS, type ImageTransformParams, imageTransformParams } from '@/schemas';
 import { describeCost } from '../config/models';
 import {
   AspectRatioField,
@@ -27,9 +27,7 @@ import {
 
 const DEFAULT_VALUES: ImageFormValues = {
   prompt: '',
-  model: 'flux-2-klein',
-  aspect_ratio: 'auto',
-  resolution: '640px',
+  ...IMAGE_DEFAULTS,
 };
 
 const FORM_FIELDS: ReadonlySet<string> = new Set(Object.keys(DEFAULT_VALUES));
